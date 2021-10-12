@@ -297,8 +297,19 @@ class HRobot(object):
         )
 
     def generate_report(self):
-        os.system('allure generate %s/allure-results -o report --clean' %
-                  os.path.join(self.env['WORKDIR'], self.env['ROBOT_DIR'], self.env['OUTPUT_DIR']))
+        if not os.path.exists(self.env["HROBOT_PROJECT_FILE"]):
+            print(u'这不是一个 hRobot 项目目录')
+            return False
+        allure_results_path = os.path.join(
+            self.env['WORKDIR'],
+            self.env['ROBOT_DIR'],
+            self.env['OUTPUT_DIR'],
+            'allure-results'
+        )
+        if not os.path.exists(allure_results_path):
+            print(u'尚未发现测试用例执行记录，你可以尝试使用 hrobot run 来执行测试用例')
+            return False
+        os.system('allure generate %s -o report --clean' % allure_results_path)
         os.system('allure open -p 80 report')
 
     def debug_project(self):
