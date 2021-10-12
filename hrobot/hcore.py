@@ -33,13 +33,10 @@ class HRobot(object):
             "KEYWORDS_FILE": "keywords.xls",
             "VARIABLES_DIR": "variables",
             "VARIABLES_FILE": "variables.xls",
-            "ROBOT_DIR": "robotframework",
+            "ROBOT_DIR": os.path.basename(os.path.abspath('.')),
             "HROBOT_KEYWORDS_ROBOT_FILE": "hrobot.robot",
             "OUTPUT_DIR": "output",
         }
-        if os.path.exists(self.env['HROBOT_PROJECT_FILE']):
-            with open(self.env['HROBOT_PROJECT_FILE'], 'r', encoding='utf-8') as f:
-                self.env['ROBOT_DIR'] = f.read()
         self.book_style = xlwt.XFStyle()
         self.book_font = xlwt.Font()
         self.book_font.name = u'黑体'
@@ -279,8 +276,6 @@ class HRobot(object):
         if not os.path.exists(self.env["HROBOT_PROJECT_FILE"]):
             print(u'这不是一个 hRobot 项目目录')
             return False
-        with open(self.env["HROBOT_PROJECT_FILE"], 'r', encoding='utf-8') as f:
-            self.env['ROBOT_DIR'] = f.read()
         robot_path = os.path.join(self.env['WORKDIR'], self.env['ROBOT_DIR'])
         os.system('rm -rf %s' % robot_path)
         os.mkdir(robot_path)
