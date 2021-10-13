@@ -47,9 +47,10 @@ class HRobot(object):
         # 开始 定义 Sheet 用例
         sheet_case = book.add_sheet(sheetname=u'用例')
         sheet_case.write(0, 0, label=u'用例标题', style=self.book_style)
-        sheet_case.write(0, 1, label=u'关键字类型', style=self.book_style)
-        sheet_case.write(0, 2, label=u'关键字', style=self.book_style)
-        sheet_case.write(0, 3, label=u'参数', style=self.book_style)
+        sheet_case.write(0, 1, label=u'用例描述', style=self.book_style)
+        sheet_case.write(0, 2, label=u'关键字类型', style=self.book_style)
+        sheet_case.write(0, 3, label=u'关键字', style=self.book_style)
+        sheet_case.write(0, 4, label=u'参数', style=self.book_style)
         # 完成 定义 Sheet 用例
         # 开始 定义 Sheet 变量
         sheet_variable = book.add_sheet(sheetname=u'变量')
@@ -174,16 +175,19 @@ class HRobot(object):
         # 第1行开始是测试用例数据
         for n in range(1, nrows):
             row_data = sheet_case.row(rowx=n)
-            # Excel 表头是"用例标题"的列号单元格中数据
+            # 开始处理 用例标题 和 用例描述 : Excel 表头是"用例标题"和"用例描述"的列号单元格中数据
             case_title = row_data[sheet_header[u'用例标题']].value
+            case_description = row_data[sheet_header[u'用例描述']].value
             # 如果测试用例数据尚无记录，或者A列不为空且用例标题与记录中最后一个不同，就初始化一个新的用例记录，虽然可以简单粗暴的在 .robot 加空行，但似乎这样处理更美观，待后续再看看有无更好的方案
             if len(robot_json['testcases']) == 0 or \
                     len(case_title) != 0 and case_title != robot_json['testcases'][-1]['title']:
                 print(u'发现测试用例 %s' % case_title)
                 robot_json['testcases'].append({
                     'title': case_title,
+                    'description': case_description,
                     'steps': []
                 })
+            # 完成处理 用例标题 和 用例描述
             # Excel 中表头是"关键字类型" + 表头是"关键字" 的单元格数据拼装出真正的关键字
             step_kw_type = row_data[sheet_header[u'关键字类型']].value
             step_kw_name = row_data[sheet_header[u'关键字']].value
@@ -218,6 +222,7 @@ class HRobot(object):
             robot_testcases = '\n'.join([
                 robot_testcases,
                 tc['title'],
+                '\t[Documentation]\t%s' % tc['description'],
                 '\t%s' % robot_steps
             ])
         robot_keywords = '\n'.join([
