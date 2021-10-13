@@ -44,14 +44,26 @@ class HRobot(object):
 
     def generate_testcase_xl(self, xl_file):
         book = xlwt.Workbook(encoding="utf-8")
-        suite_sheet = book.add_sheet(sheetname=u'用例')
-        suite_sheet.write(0, 0, label=u'用例标题', style=self.book_style)
-        suite_sheet.write(0, 1, label=u'关键字类型', style=self.book_style)
-        suite_sheet.write(0, 2, label=u'关键字', style=self.book_style)
-        suite_sheet.write(0, 3, label=u'参数', style=self.book_style)
-        keyword_sheet = book.add_sheet(sheetname=u'内置关键字')
-        keyword_sheet.write(0, 0, label=u'关键字类型', style=self.book_style)
-        keyword_sheet.write(0, 1, label=u'关键字', style=self.book_style)
+        # 开始 定义 Sheet 用例
+        sheet_case = book.add_sheet(sheetname=u'用例')
+        sheet_case.write(0, 0, label=u'用例标题', style=self.book_style)
+        sheet_case.write(0, 1, label=u'关键字类型', style=self.book_style)
+        sheet_case.write(0, 2, label=u'关键字', style=self.book_style)
+        sheet_case.write(0, 3, label=u'参数', style=self.book_style)
+        # 完成 定义 Sheet 用例
+        # 开始 定义 Sheet 变量
+        sheet_variable = book.add_sheet(sheetname=u'变量')
+        # 完成 定义 Sheet 变量
+        # 开始 定义 Sheet 前置
+        sheet_setup = book.add_sheet(sheetname=u'前置')
+        # 完成 定义 Sheet 前置
+        # 开始 定义 Sheet 后置
+        sheet_teardown = book.add_sheet(sheetname=u'后置')
+        # 完成 定义 Sheet 后置
+        # 开始 定义 Sheet 内置关键字
+        sheet_keyword = book.add_sheet(sheetname=u'内置关键字')
+        sheet_keyword.write(0, 0, label=u'关键字类型', style=self.book_style)
+        sheet_keyword.write(0, 1, label=u'关键字', style=self.book_style)
         keyword_row = 0
         # <开始提取内置关键字> 提取出 hRobot 中内置的关键字列表
         # robot_keywords = list()
@@ -60,8 +72,8 @@ class HRobot(object):
             if not hkw.startswith('_'):
                 keyword_row += 1
                 keyword_name = u'%s' % inspect.getdoc(hkeywords.__getattribute__(hkw)).split(u'内置.')[1]
-                keyword_sheet.write(keyword_row, 0, label=u'内置', style=self.book_style)
-                keyword_sheet.write(keyword_row, 1, label=keyword_name, style=self.book_style)
+                sheet_keyword.write(keyword_row, 0, label=u'内置', style=self.book_style)
+                sheet_keyword.write(keyword_row, 1, label=keyword_name, style=self.book_style)
                 print(u'发现内置关键字 %s' % keyword_name)
                 # keyword_args = inspect.getfullargspec(hkeywords.__getattribute__(hkw)).args[1:]
                 # robot_keywords.append(keyword_name)
@@ -74,6 +86,7 @@ class HRobot(object):
                 #         '}    ${'.join(keyword_args)
                 #     ))
         # <提取完成>
+        # 完成 定义 Sheet 内置关键字
         # suite_sheet.write(1, 1, label=xlwt.Formula(u'内置关键字!A2'), style=book_style)
         book.save(xl_file)
 
@@ -129,98 +142,96 @@ class HRobot(object):
         """
         book = xlrd.open_workbook(xl_file)
         robot_file_name_prefix = os.path.basename(xl_file).split('.')[0]
-        for sheet in book.sheets():
-            if sheet.name in [u"内置关键字"]:
-                continue
-            # <开始表头解析> 第0行是表头，处理成字典格式，表头与列号的对应关系，好在后续用例解析的时候灵活使用
-            sheet_header = dict()
-            col_num = 0
-            for col_name in sheet.row(rowx=0):
-                sheet_header[col_name.value] = col_num
-                col_num += 1
-            # <完成表头解析>
-            nrows = sheet.nrows
-            robot_file = os.path.join(
-                self.env['WORKDIR'],
-                self.env['ROBOT_DIR'],
-                self.env['TESTCASES_DIR'],
-                '%s_%s' % (robot_file_name_prefix, sheet.name)
-            )
-            robot_json = {
-                'settings': {
-                    'documentation': robot_file,
-                    'resource': set(),
-                    'test_setup': set(),
-                    'test_teardown': set(),
-                },
-                'variables': {},
-                'testcases': [],
-                'keywords': set()
-            }
-            hrobot_keywords_file = os.path.join('..', self.env['KEYWORDS_DIR'], self.env['HROBOT_KEYWORDS_ROBOT_FILE'])
-            robot_json['settings']['resource'].add(hrobot_keywords_file)
+        sheet_case = book.sheet_by_name(u'用例')
+        # <开始表头解析> 第0行是表头，处理成字典格式，表头与列号的对应关系，好在后续用例解析的时候灵活使用
+        sheet_header = dict()
+        col_num = 0
+        for col_name in sheet_case.row(rowx=0):
+            sheet_header[col_name.value] = col_num
+            col_num += 1
+        # <完成表头解析>
+        nrows = sheet_case.nrows
+        robot_file = os.path.join(
+            self.env['WORKDIR'],
+            self.env['ROBOT_DIR'],
+            self.env['TESTCASES_DIR'],
+            '%s' % robot_file_name_prefix
+        )
+        robot_json = {
+            'settings': {
+                'documentation': robot_file,
+                'resource': set(),
+                'test_setup': set(),
+                'test_teardown': set(),
+            },
+            'variables': {},
+            'testcases': [],
+            'keywords': set()
+        }
+        hrobot_keywords_file = os.path.join('..', self.env['KEYWORDS_DIR'], self.env['HROBOT_KEYWORDS_ROBOT_FILE'])
+        robot_json['settings']['resource'].add(hrobot_keywords_file)
 
-            # 第1行开始是测试用例数据
-            for n in range(1, nrows):
-                row_data = sheet.row(rowx=n)
-                # Excel 表头是"用例标题"的列号单元格中数据
-                case_title = row_data[sheet_header[u'用例标题']].value
-                # 如果测试用例数据尚无记录，或者A列不为空且用例标题与记录中最后一个不同，就初始化一个新的用例记录，虽然可以简单粗暴的在 .robot 加空行，但似乎这样处理更美观，待后续再看看有无更好的方案
-                if len(robot_json['testcases']) == 0 or \
-                        len(case_title) != 0 and case_title != robot_json['testcases'][-1]['title']:
-                    print(u'发现测试用例 %s' % case_title)
-                    robot_json['testcases'].append({
-                        'title': case_title,
-                        'steps': []
-                    })
-                # Excel 中表头是"关键字类型" + 表头是"关键字" 的单元格数据拼装出真正的关键字
-                step_kw_type = row_data[sheet_header[u'关键字类型']].value
-                step_kw_name = row_data[sheet_header[u'关键字']].value
-                step_kw = '.'.join([step_kw_type, step_kw_name])
-                # 如果关键字不是内置的，就需要在 .robot 开头导入自定义关键字库文件路径，在这里记录到 robot_json 中
-                if step_kw_type != u'内置':
-                    robot_json['settings']['resource'].add(os.path.join('..', 'keywords', step_kw_type))
-                # Excel 中表头从"参数"开始后面都是参数，添加到用例记录的最后一个用例中去
-                step_args = list()
-                for step_arg in row_data[sheet_header[u'参数']:]:
-                    step_args.append(str(step_arg.value))
-                robot_json['testcases'][-1]['steps'].append('\t'.join([
-                    step_kw,
-                    '\t'.join(step_args)
-                ]))
+        # 第1行开始是测试用例数据
+        for n in range(1, nrows):
+            row_data = sheet_case.row(rowx=n)
+            # Excel 表头是"用例标题"的列号单元格中数据
+            case_title = row_data[sheet_header[u'用例标题']].value
+            # 如果测试用例数据尚无记录，或者A列不为空且用例标题与记录中最后一个不同，就初始化一个新的用例记录，虽然可以简单粗暴的在 .robot 加空行，但似乎这样处理更美观，待后续再看看有无更好的方案
+            if len(robot_json['testcases']) == 0 or \
+                    len(case_title) != 0 and case_title != robot_json['testcases'][-1]['title']:
+                print(u'发现测试用例 %s' % case_title)
+                robot_json['testcases'].append({
+                    'title': case_title,
+                    'steps': []
+                })
+            # Excel 中表头是"关键字类型" + 表头是"关键字" 的单元格数据拼装出真正的关键字
+            step_kw_type = row_data[sheet_header[u'关键字类型']].value
+            step_kw_name = row_data[sheet_header[u'关键字']].value
+            step_kw = '.'.join([step_kw_type, step_kw_name])
+            # 如果关键字不是内置的，就需要在 .robot 开头导入自定义关键字库文件路径，在这里记录到 robot_json 中
+            if step_kw_type != u'内置':
+                robot_json['settings']['resource'].add(os.path.join('..', 'keywords', step_kw_type))
+            # Excel 中表头从"参数"开始后面都是参数，添加到用例记录的最后一个用例中去
+            step_args = list()
+            for step_arg in row_data[sheet_header[u'参数']:]:
+                step_args.append(str(step_arg.value))
+            robot_json['testcases'][-1]['steps'].append('\t'.join([
+                step_kw,
+                '\t'.join(step_args)
+            ]))
 
-            robot_libs = 'Resource         '.join(robot_json['settings']['resource'])
-            robot_settings = '\n'.join([
-                '*** Settings ***',
-                'Documentation    %s' % robot_json['settings']['documentation'],
-                'Resource         %s' % robot_libs,
-            ])
-            robot_variables = '\n'.join([
-                '*** Variables ***',
-                '\n'
-            ])
+        robot_libs = 'Resource         '.join(robot_json['settings']['resource'])
+        robot_settings = '\n'.join([
+            '*** Settings ***',
+            'Documentation    %s' % robot_json['settings']['documentation'],
+            'Resource         %s' % robot_libs,
+        ])
+        robot_variables = '\n'.join([
+            '*** Variables ***',
+            '\n'
+        ])
+        robot_testcases = '\n'.join([
+            '*** Test Cases ***',
+        ])
+        for tc in robot_json['testcases']:
+            robot_steps = '\n\t'.join(tc['steps'])
             robot_testcases = '\n'.join([
-                '*** Test Cases ***',
-            ])
-            for tc in robot_json['testcases']:
-                robot_steps = '\n\t'.join(tc['steps'])
-                robot_testcases = '\n'.join([
-                    robot_testcases,
-                    tc['title'],
-                    '\t%s' % robot_steps
-                ])
-            robot_keywords = '\n'.join([
-                '*** Keywords ***',
-                '\n',
-            ])
-            robot_content = '\n'.join([
-                robot_settings,
-                robot_variables,
                 robot_testcases,
-                robot_keywords
+                tc['title'],
+                '\t%s' % robot_steps
             ])
-            with open('%s.robot' % robot_file, 'w', encoding='utf-8') as f:
-                f.write(robot_content)
+        robot_keywords = '\n'.join([
+            '*** Keywords ***',
+            '\n',
+        ])
+        robot_content = '\n'.join([
+            robot_settings,
+            robot_variables,
+            robot_testcases,
+            robot_keywords
+        ])
+        with open('%s.robot' % robot_file, 'w', encoding='utf-8') as f:
+            f.write(robot_content)
 
     def cls_to_robot_builtin_keyword(self):
         """
