@@ -27,7 +27,7 @@ jobs:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        hrobot_ver=$(echo "${GITHUB_REF}" | awk -F 'refs/heads/v' '{print $NF}')
+        hrobot_ver=$(echo "${GITHUB_REF}" | awk -F 'refs/tags/v' '{print $NF}')
         echo $hrobot_ver
         sed -i "s#VERSION =.*#VERSION = '${hrobot_ver}'#" setup.py
         python setup.py sdist bdist_wheel
