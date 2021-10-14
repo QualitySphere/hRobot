@@ -143,6 +143,7 @@ class HRobot(object):
         """
         book = xlrd.open_workbook(xl_file)
         robot_file_name_prefix = os.path.basename(xl_file).split('.')[0]
+        # 开始解析 sheet 用例
         sheet_case = book.sheet_by_name(u'用例')
         # <开始表头解析> 第0行是表头，处理成字典格式，表头与列号的对应关系，好在后续用例解析的时候灵活使用
         sheet_header = dict()
@@ -162,12 +163,14 @@ class HRobot(object):
             'settings': {
                 'documentation': robot_file,
                 'resource': set(),
+                'suite_setup': u'用例集前置',
+                'suite_teardown': set(),
                 'test_setup': set(),
                 'test_teardown': set(),
             },
             'variables': {},
             'testcases': [],
-            'keywords': set()
+            'keywords': []
         }
         hrobot_keywords_file = os.path.join('..', self.env['KEYWORDS_DIR'], self.env['HROBOT_KEYWORDS_ROBOT_FILE'])
         robot_json['settings']['resource'].add(hrobot_keywords_file)
@@ -203,20 +206,40 @@ class HRobot(object):
                 step_kw,
                 '\t'.join(step_args)
             ]))
+        # 解析 sheet 用例 完成
+
+        # 开始解析 sheet 前置
+        sheet_setup = book.sheet_by_name(u'前置')
+        sheet_header = dict()
+        col_num = 0
+        for col_name in sheet_setup.row(rowx=0):
+            sheet_header[col_name.value] = col_num
+            col_num += 1
+        suite_setup_steps = list()
+        for n in range(1, sheet_setup.nrows):
+            row_data = sheet_setup.row(rowx=n)
+            step_kw_type = row_data[sheet_header[u'关键字类型']].value
+            step_kw_name = row_data[sheet_header[u'关键字']].value
+            step_kw = '.'.join([step_kw_type, step_kw_name])
+            step_args = list()
+            for step_arg in row_data[sheet_header[u'参数']:]:
+                step_args.append(str(step_arg.value))
+            suite_setup_steps.append('\t'.join([step_kw, '\t'.join(step_args)]))
+        robot_json['keywords'].append({
+            robot_json['settings']['suite_setup']: '\t' + '\n\t'.join(suite_setup_steps)
+        })
+        # 解析 sheet 前置 完成
 
         robot_libs = 'Resource         '.join(robot_json['settings']['resource'])
         robot_settings = '\n'.join([
             '*** Settings ***',
             'Documentation    %s' % robot_json['settings']['documentation'],
             'Resource         %s' % robot_libs,
+            'Suite Setup      %s' % robot_json['settings']['suite_setup'],
+            # 'Suite Teardown   用例集后置',
         ])
-        robot_variables = '\n'.join([
-            '*** Variables ***',
-            '\n'
-        ])
-        robot_testcases = '\n'.join([
-            '*** Test Cases ***',
-        ])
+        robot_variables = '*** Variables ***'
+        robot_testcases = '*** Test Cases ***'
         for tc in robot_json['testcases']:
             robot_steps = '\n\t'.join(tc['steps'])
             robot_testcases = '\n'.join([
@@ -225,10 +248,14 @@ class HRobot(object):
                 '\t[Documentation]\t%s' % tc['description'],
                 '\t%s' % robot_steps
             ])
-        robot_keywords = '\n'.join([
-            '*** Keywords ***',
-            '\n',
-        ])
+        robot_keywords = '*** Keywords ***'
+        for kw in robot_json['keywords']:
+            for kw_key, kw_value in kw.items():
+                robot_keywords = '\n'.join([
+                    robot_keywords,
+                    kw_key,
+                    kw_value
+                ])
         robot_content = '\n'.join([
             robot_settings,
             robot_variables,
@@ -470,20 +497,43 @@ class HKeywords(object):
                 "Content-Type": "Application/json"
             }
         self.__response = self.__session.get(url=url, headers=headers, params=params, verify=False)
-        print(self.__response.content)
+        print('\n'.join([
+            u'== 请求 == ',
+            u'   Method     : %s' % self.__response.request.method,
+            u'   URL        : %s' % url,
+            u'   Query      : %s' % params,
+            u'   Cookies    : %s' % self.__response.request._cookies._cookies,
+            u'   Headers    : %s' % self.__response.request.headers
+        ]))
+        print('\n'.join([
+            u'== 响应 == ',
+            u'   Status Code: %s' % self.__response.status_code,
+            u'   Headers    : %s' % self.__response.headers,
+            u'   Body       : %s' % self.__response.content
+        ]))
         return True
 
     def kw_request_post(self, url, headers, body):
         """内置.接口.POST"""
         url = self.__smart_content(url)
-        print('URL: %s' % url)
         headers = json.loads(self.__smart_content(headers))
-        print('Headers: %s' % headers)
         body = json.loads(self.__smart_content(body))
-        print('Body: %s' % body)
         self.kw_request_open()
         self.__response = self.__session.post(url=url, headers=headers, json=body, verify=False)
-        print(self.__response.content)
+        print('\n'.join([
+            u'== 请求 == ',
+            u'   Method     : %s' % self.__response.request.method,
+            u'   URL        : %s' % url,
+            u'   Cookies    : %s' % self.__response.request._cookies._cookies,
+            u'   Headers    : %s' % self.__response.request.headers,
+            u'   Body       : %s' % body
+        ]))
+        print('\n'.join([
+            u'== 响应 == ',
+            u'   Status Code: %s' % self.__response.status_code,
+            u'   Headers    : %s' % self.__response.headers,
+            u'   Body       : %s' % self.__response.content
+        ]))
         return True
 
     def __get_response_smart_value(self, smart_key):
