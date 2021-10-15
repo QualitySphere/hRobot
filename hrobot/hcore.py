@@ -44,49 +44,94 @@ class HRobot(object):
         }
         self.book_style = xlwt.XFStyle()
         self.book_font = xlwt.Font()
+        self.book_alignment = xlwt.Alignment()
+        self.book_alignment.vert = 0x01
         self.book_font.name = u'黑体'
+        self.book_font.height = 20 * 12
         self.book_style.font = self.book_font
+        self.book_style.alignment = self.book_alignment
 
     def generate_testcase_xl(self, xl_file):
         book = xlwt.Workbook(encoding="utf-8")
         # 开始 定义 Sheet 用例
         sheet_case = book.add_sheet(sheetname=u'用例')
+        for i in range(0, 256):
+            sheet_case.row(i).height_mismatch = True
+            sheet_case.row(i).height = 20 * 26
         sheet_case.write(0, 0, label=u'用例标题', style=self.book_style)
+        sheet_case.col(0).width = 256 * 24
         sheet_case.write(0, 1, label=u'用例描述', style=self.book_style)
+        sheet_case.col(1).width = 256 * 32
         sheet_case.write(0, 2, label=u'关键字类型', style=self.book_style)
+        sheet_case.col(2).width = 256 * 14
         sheet_case.write(0, 3, label=u'关键字', style=self.book_style)
+        sheet_case.col(3).width = 256 * 24
         sheet_case.write(0, 4, label=u'参数', style=self.book_style)
+        sheet_case.col(4).width = 256 * 24
+        for i in range(5, 10):
+            sheet_case.col(i).width = 256 * 24
         # 完成 定义 Sheet 用例
         # 开始 定义 Sheet 变量
         sheet_variable = book.add_sheet(sheetname=u'变量')
+        for i in range(0, 256):
+            sheet_case.row(i).height_mismatch = True
+            sheet_case.row(i).height = 20 * 26
         sheet_variable.write(0, 0, label=u'变量类型', style=self.book_style)
+        sheet_case.col(0).width = 256 * 14
         sheet_variable.write(0, 1, label=u'变量名', style=self.book_style)
+        sheet_case.col(3).width = 256 * 24
         sheet_variable.write(0, 2, label=u'变量值', style=self.book_style)
+        sheet_case.col(3).width = 256 * 24
+        for i in range(5, 10):
+            sheet_case.col(i).width = 256 * 24
         # 完成 定义 Sheet 变量
         # 开始 定义 Sheet 前置
         sheet_setup = book.add_sheet(sheetname=u'前置')
+        for i in range(0, 256):
+            sheet_case.row(i).height_mismatch = True
+            sheet_case.row(i).height = 20 * 26
         sheet_setup.write(0, 0, label=u'关键字类型', style=self.book_style)
+        sheet_case.col(0).width = 256 * 14
         sheet_setup.write(0, 1, label=u'关键字', style=self.book_style)
+        sheet_case.col(3).width = 256 * 24
         sheet_setup.write(0, 2, label=u'参数', style=self.book_style)
+        sheet_case.col(3).width = 256 * 24
+        for i in range(4, 10):
+            sheet_case.col(i).width = 256 * 24
         sheet_setup.write(1, 0, label=u'内置', style=self.book_style)
         sheet_setup.write(1, 1, label=u'日志', style=self.book_style)
         sheet_setup.write(1, 2, label=u'测试用例集执行前的准备工作', style=self.book_style)
         # 完成 定义 Sheet 前置
         # 开始 定义 Sheet 后置
         sheet_teardown = book.add_sheet(sheetname=u'后置')
+        for i in range(0, 256):
+            sheet_case.row(i).height_mismatch = True
+            sheet_case.row(i).height = 20 * 26
         sheet_teardown.write(0, 0, label=u'关键字类型', style=self.book_style)
+        sheet_case.col(0).width = 256 * 14
         sheet_teardown.write(0, 1, label=u'关键字', style=self.book_style)
+        sheet_case.col(3).width = 256 * 24
         sheet_teardown.write(0, 2, label=u'参数', style=self.book_style)
+        sheet_case.col(3).width = 256 * 24
+        for i in range(4, 10):
+            sheet_case.col(i).width = 256 * 24
         sheet_teardown.write(1, 0, label=u'内置', style=self.book_style)
         sheet_teardown.write(1, 1, label=u'日志', style=self.book_style)
         sheet_teardown.write(1, 2, label=u'测试用例集执行完成后的清理工作', style=self.book_style)
         # 完成 定义 Sheet 后置
         # 开始 定义 Sheet 内置关键字
         sheet_keyword = book.add_sheet(sheetname=u'内置关键字')
+        for i in range(0, 256):
+            sheet_case.row(i).height_mismatch = True
+            sheet_case.row(i).height = 20 * 26
         sheet_keyword.write(0, 0, label=u'关键字类型', style=self.book_style)
+        sheet_case.col(0).width = 256 * 14
         sheet_keyword.write(0, 1, label=u'关键字', style=self.book_style)
-        keyword_row = 0
+        sheet_case.col(3).width = 256 * 24
+        for i in range(4, 10):
+            sheet_case.col(i).width = 256 * 24
         # <开始提取内置关键字> 提取出 hRobot 中内置的关键字列表
+        keyword_row = 0
         # robot_keywords = list()
         hkeywords = HKeywords()
         for hkw in hkeywords.__dir__():
