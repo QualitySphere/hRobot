@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import logging
 import os
 
 # import hrobot.hcore
 import xlrd
 import xlwt
 import robot
+from robot.api import logger
 from selenium import webdriver
 import requests
 import platform
@@ -20,6 +20,11 @@ from datetime import datetime
 
 def timestamp_before_hour():
     return int(datetime.now().timestamp()) * 1000 - 3600000
+
+
+def print_info(info_string):
+    logger.info(info_string, html=True, also_console=True)
+    return True
 
 
 class HRobot(object):
@@ -54,12 +59,27 @@ class HRobot(object):
         # 完成 定义 Sheet 用例
         # 开始 定义 Sheet 变量
         sheet_variable = book.add_sheet(sheetname=u'变量')
+        sheet_variable.write(0, 0, label=u'变量类型', style=self.book_style)
+        sheet_variable.write(0, 1, label=u'变量名', style=self.book_style)
+        sheet_variable.write(0, 2, label=u'变量值', style=self.book_style)
         # 完成 定义 Sheet 变量
         # 开始 定义 Sheet 前置
         sheet_setup = book.add_sheet(sheetname=u'前置')
+        sheet_setup.write(0, 0, label=u'关键字类型', style=self.book_style)
+        sheet_setup.write(0, 1, label=u'关键字', style=self.book_style)
+        sheet_setup.write(0, 2, label=u'参数', style=self.book_style)
+        sheet_setup.write(1, 0, label=u'内置', style=self.book_style)
+        sheet_setup.write(1, 1, label=u'日志', style=self.book_style)
+        sheet_setup.write(1, 2, label=u'测试用例集执行前的准备工作', style=self.book_style)
         # 完成 定义 Sheet 前置
         # 开始 定义 Sheet 后置
         sheet_teardown = book.add_sheet(sheetname=u'后置')
+        sheet_teardown.write(0, 0, label=u'关键字类型', style=self.book_style)
+        sheet_teardown.write(0, 1, label=u'关键字', style=self.book_style)
+        sheet_teardown.write(0, 2, label=u'参数', style=self.book_style)
+        sheet_teardown.write(1, 0, label=u'内置', style=self.book_style)
+        sheet_teardown.write(1, 1, label=u'日志', style=self.book_style)
+        sheet_teardown.write(1, 2, label=u'测试用例集执行完成后的清理工作', style=self.book_style)
         # 完成 定义 Sheet 后置
         # 开始 定义 Sheet 内置关键字
         sheet_keyword = book.add_sheet(sheetname=u'内置关键字')
@@ -135,6 +155,26 @@ class HRobot(object):
             ]))
         return True
 
+    @staticmethod
+    def __smart_content(content, robot_variables):
+        new_content = content
+        var_pattern = re.compile("{{[a-zA-Z0-9 _-]*}}")
+        if robot_variables:
+            for var_key_str in var_pattern.findall(content):
+                var_key = var_key_str.strip('{{').strip('}}').strip()
+                try:
+                    # 若变量能在参数中找到,就处理成 robot 变量格式
+                    if robot_variables[var_key]['type'] == 'list':
+                        new_content = content.replace(var_key_str, '@{%s}' % var_key)
+                    elif robot_variables[var_key]['type'] == 'dict':
+                        new_content = content.replace(var_key_str, '&{%s}' % var_key)
+                    else:
+                        new_content = content.replace(var_key_str, '${%s}' % var_key)
+                except KeyError:
+                    # 如果找不到就不处理
+                    print(u'未在参数中找到该变量值')
+        return new_content
+
     def xl_to_robot_case(self, xl_file):
         """
         excel 文件转换为 RobotFramework 用例文件 .robot
@@ -143,16 +183,6 @@ class HRobot(object):
         """
         book = xlrd.open_workbook(xl_file)
         robot_file_name_prefix = os.path.basename(xl_file).split('.')[0]
-        # 开始解析 sheet 用例
-        sheet_case = book.sheet_by_name(u'用例')
-        # <开始表头解析> 第0行是表头，处理成字典格式，表头与列号的对应关系，好在后续用例解析的时候灵活使用
-        sheet_header = dict()
-        col_num = 0
-        for col_name in sheet_case.row(rowx=0):
-            sheet_header[col_name.value] = col_num
-            col_num += 1
-        # <完成表头解析>
-        nrows = sheet_case.nrows
         robot_file = os.path.join(
             self.env['WORKDIR'],
             self.env['ROBOT_DIR'],
@@ -164,7 +194,7 @@ class HRobot(object):
                 'documentation': robot_file,
                 'resource': set(),
                 'suite_setup': u'用例集前置',
-                'suite_teardown': set(),
+                'suite_teardown': u'用例集后置',
                 'test_setup': set(),
                 'test_teardown': set(),
             },
@@ -175,6 +205,47 @@ class HRobot(object):
         hrobot_keywords_file = os.path.join('..', self.env['KEYWORDS_DIR'], self.env['HROBOT_KEYWORDS_ROBOT_FILE'])
         robot_json['settings']['resource'].add(hrobot_keywords_file)
 
+        # 开始解析 sheet 变量
+        sheet_variables = book.sheet_by_name(u'变量')
+        sheet_header = dict()
+        col_num = 0
+        for col_name in sheet_variables.row(rowx=0):
+            sheet_header[col_name.value] = col_num
+            col_num += 1
+        for n in range(1, sheet_variables.nrows):
+            row_data = sheet_variables.row(rowx=n)
+            var_key = row_data[sheet_header[u'变量名']].value
+            var_type = row_data[sheet_header[u'变量类型']].value
+            var_value = row_data[sheet_header[u'变量值']].value
+            if var_type in ['str']:
+                var_type = 'str'
+                var_value = str(var_value)
+            elif var_type in ['int']:
+                var_type = 'int'
+                var_value = int(float(var_value))
+            elif var_type in ['list']:
+                var_type = 'list'
+                var_value = json.dumps(var_value)
+            elif var_type in ['dict']:
+                var_type = 'dict'
+                var_value = json.dumps(var_value)
+            robot_json['variables'][var_key] = {
+                "type": var_type,
+                "value": var_value
+            }
+            # logger.info(robot_json, also_console=True)
+        # 解析 sheet 变量 完成
+
+        # 开始解析 sheet 用例
+        sheet_case = book.sheet_by_name(u'用例')
+        # <开始表头解析> 第0行是表头，处理成字典格式，表头与列号的对应关系，好在后续用例解析的时候灵活使用
+        sheet_header = dict()
+        col_num = 0
+        for col_name in sheet_case.row(rowx=0):
+            sheet_header[col_name.value] = col_num
+            col_num += 1
+        # <完成表头解析>
+        nrows = sheet_case.nrows
         # 第1行开始是测试用例数据
         for n in range(1, nrows):
             row_data = sheet_case.row(rowx=n)
@@ -201,7 +272,9 @@ class HRobot(object):
             # Excel 中表头从"参数"开始后面都是参数，添加到用例记录的最后一个用例中去
             step_args = list()
             for step_arg in row_data[sheet_header[u'参数']:]:
-                step_args.append(str(step_arg.value))
+                # logger.info(step_arg.value, also_console=True)
+                # logger.info(robot_json['variables'], also_console=True)
+                step_args.append('%s' % self.__smart_content(str(step_arg.value), robot_json['variables']))
             robot_json['testcases'][-1]['steps'].append('\t'.join([
                 step_kw,
                 '\t'.join(step_args)
@@ -230,23 +303,61 @@ class HRobot(object):
         })
         # 解析 sheet 前置 完成
 
+        # 开始解析 sheet 后置
+        sheet_teardown = book.sheet_by_name(u'后置')
+        sheet_header = dict()
+        col_num = 0
+        for col_name in sheet_teardown.row(rowx=0):
+            sheet_header[col_name.value] = col_num
+            col_num += 1
+        suite_teardown_steps = list()
+        for n in range(1, sheet_teardown.nrows):
+            row_data = sheet_teardown.row(rowx=n)
+            step_kw_type = row_data[sheet_header[u'关键字类型']].value
+            step_kw_name = row_data[sheet_header[u'关键字']].value
+            step_kw = '.'.join([step_kw_type, step_kw_name])
+            step_args = list()
+            for step_arg in row_data[sheet_header[u'参数']:]:
+                step_args.append(str(step_arg.value))
+            suite_teardown_steps.append('\t'.join([step_kw, '\t'.join(step_args)]))
+        robot_json['keywords'].append({
+            robot_json['settings']['suite_teardown']: '\t' + '\n\t'.join(suite_teardown_steps)
+        })
+        # 解析 sheet 后置 完成
+
         robot_libs = 'Resource         '.join(robot_json['settings']['resource'])
         robot_settings = '\n'.join([
             '*** Settings ***',
-            'Documentation    %s' % robot_json['settings']['documentation'],
-            'Resource         %s' % robot_libs,
-            'Suite Setup      %s' % robot_json['settings']['suite_setup'],
-            # 'Suite Teardown   用例集后置',
+            u'Documentation    %s' % robot_json['settings']['documentation'],
+            u'Resource         %s' % robot_libs,
+            u'Suite Setup      %s' % robot_json['settings']['suite_setup'],
+            u'Suite Teardown   %s' % robot_json['settings']['suite_teardown'],
         ])
         robot_variables = '*** Variables ***'
+        for var_item_key, var_item_value in robot_json['variables'].items():
+            logger.info('%s : %s' % (var_item_key, var_item_value), also_console=True)
+            if var_item_value['type'] in ['str', 'int']:
+                var_item_string = '${%s}\t%s' % (var_item_key, var_item_value['value'])
+            elif var_item_value['type'] == 'list':
+                var_item_string = '@{%s}\t%s' % (var_item_key, var_item_value['value'])
+            elif var_item_value['type'] == 'dict':
+                var_item_string = '&{%s}\t%s' % (var_item_key, var_item_value['value'])
+            else:
+                var_item_string = '${%s}\t%s' % (var_item_key, var_item_value['value'])
+            robot_variables = '\n'.join([
+                robot_variables,
+                var_item_string
+            ])
+            # logger.info('%s' % robot_variables, also_console=True)
+
         robot_testcases = '*** Test Cases ***'
         for tc in robot_json['testcases']:
             robot_steps = '\n\t'.join(tc['steps'])
             robot_testcases = '\n'.join([
                 robot_testcases,
                 tc['title'],
-                '\t[Documentation]\t%s' % tc['description'],
-                '\t%s' % robot_steps
+                u'\t[Documentation]\t%s' % tc['description'],
+                u'\t%s' % robot_steps
             ])
         robot_keywords = '*** Keywords ***'
         for kw in robot_json['keywords']:
@@ -293,13 +404,13 @@ class HRobot(object):
                         '}    ${'.join(keyword_args)
                     ))
         robot_content = '\n'.join([
-            '*** Settings ***',
-            'Documentation    hRobot Keywords',
-            'Library          hrobot.hcore.HKeywords',
-            '\n',
-            '*** Keywords ***',
-            '\n'.join(robot_keywords),
-            '\n',
+            u'*** Settings ***',
+            u'Documentation    hRobot Keywords',
+            u'Library          hrobot.hcore.HKeywords',
+            u'\n',
+            u'*** Keywords ***',
+            u'\n'.join(robot_keywords),
+            u'\n',
         ])
         with open(robot_file, 'w', encoding='utf-8') as f:
             f.write(robot_content)
@@ -334,10 +445,20 @@ class HRobot(object):
             consolewidth=80,
             consolecolors='on',
             outputdir=os.path.join(robot_path, self.env['OUTPUT_DIR']),
-            listener='hrobot.Listener.allure_robotframework;%s' % allure_results_dir,
+            # listener='hrobot.Listener.allure_robotframework;%s' % allure_results_dir,
+            listener='allure_robotframework;%s' % allure_results_dir,
             reporttitle='Hybrid Robot Report',
             variablefile=os.listdir(os.path.join(robot_path, self.env['VARIABLES_DIR']))
         )
+        with open(os.path.join(allure_results_dir, 'environment.properties'), 'w', encoding='utf-8') as f:
+            f.write('\n'.join([
+                ''
+            ]))
+        with open(os.path.join(allure_results_dir, 'executor.json'), 'w', encoding='utf-8') as f:
+            f.write(json.dumps({
+                "name": "Hybrid Robot",
+                "type": "hrobot"
+            }))
 
     def generate_report(self):
         if not os.path.exists(self.env["HROBOT_PROJECT_FILE"]):
@@ -368,25 +489,31 @@ class HKeywords(object):
         self.__variables = dict()
 
     def __smart_content(self, content):
-        print(u'源内容: %s' % content)
-        # 开始解析替换变量
+        new_content = content
+        # 开始解析替换 变量
         var_pattern = re.compile("{{[a-zA-Z0-9 _-]*}}")
         for var_key_str in var_pattern.findall(content):
             var_key = var_key_str.strip('{{').strip('}}').strip()
             try:
+                # 尝试在当前类中的变量列表中查找
                 var_value = self.__variables[var_key]
             except KeyError:
+                # 若不存在再到全局变量中查找
                 var_value = os.getenv('HROBOT_%s' % var_key)
-            print(u'%s 替换成 %s' % (var_key_str, var_value))
-            content = content.replace(var_key_str, str(var_value))
-        # 完成解析替换
+            print_info(u'%s = %s' % (var_key_str, var_value))
+            new_content = new_content.replace(var_key_str, str(var_value))
+        # 完成解析替换 变量
+        # 开始解析替换 函数执行结果
         fun_pattern = re.compile("{%[a-zA-Z0-9 ()_.*/+-]*%}")
         for fun_name in fun_pattern.findall(content):
             fun_result = eval(fun_name.strip('{%').strip('%}').strip())
-            print(u'%s 替换成 %s' % (fun_name, fun_result))
-            content = content.replace(fun_name, str(fun_result))
-        print(u'渲染后: %s' % content)
-        return content
+            print_info(u'%s = %s' % (fun_name, fun_result))
+            new_content = new_content.replace(fun_name, str(fun_result))
+        # 完成解析替换 函数执行结果
+        if new_content != content:
+            print_info(u'源内容: %s' % content)
+            print_info(u'渲染后: %s' % new_content)
+        return new_content
 
     def kw_timestamp(self):
         """内置.时间戳"""
@@ -402,20 +529,20 @@ class HKeywords(object):
     def kw_set_env(self, key, value):
         """内置.全局变量.赋值"""
         var_value = self.__smart_content(value)
-        print('%s=%s' % (key, var_value))
+        print_info('%s=%s' % (key, var_value))
         os.environ.setdefault('HROBOT_%s' % key, var_value)
         return True
 
     def kw_def_var(self, key, value):
         """内置.变量.赋值"""
         var_value = self.__smart_content(value)
-        print('%s=%s' % (key, var_value))
+        print_info('%s=%s' % (key, var_value))
         self.__variables[key] = var_value
         return True
 
     def kw_sleep(self, seconds):
         """内置.休眠"""
-        print(u'休眠 %s 秒' % seconds)
+        print_info(u'小睡 %s 秒' % seconds)
         if type(seconds) is str:
             time.sleep(int(float(seconds)))
         else:
@@ -423,8 +550,9 @@ class HKeywords(object):
         return True
 
     def kw_print(self, content):
-        """内置.输出"""
-        print(content)
+        """内置.日志"""
+        print_info(self.__smart_content(content))
+        # print(content)
         return True
 
     def kw_webdriver_open(self):
@@ -497,19 +625,19 @@ class HKeywords(object):
                 "Content-Type": "Application/json"
             }
         self.__response = self.__session.get(url=url, headers=headers, params=params, verify=False)
-        print('\n'.join([
-            u'== 请求 == ',
+        print_info('\n'.join([
+            u'请求',
             u'   Method     : %s' % self.__response.request.method,
             u'   URL        : %s' % url,
             u'   Query      : %s' % params,
             u'   Cookies    : %s' % self.__response.request._cookies._cookies,
             u'   Headers    : %s' % self.__response.request.headers
         ]))
-        print('\n'.join([
-            u'== 响应 == ',
+        print_info('\n'.join([
+            u'响应',
             u'   Status Code: %s' % self.__response.status_code,
             u'   Headers    : %s' % self.__response.headers,
-            u'   Body       : %s' % self.__response.content
+            u'   Body       : %s' % self.__response.content.decode()
         ]))
         return True
 
@@ -520,19 +648,19 @@ class HKeywords(object):
         body = json.loads(self.__smart_content(body))
         self.kw_request_open()
         self.__response = self.__session.post(url=url, headers=headers, json=body, verify=False)
-        print('\n'.join([
-            u'== 请求 == ',
+        print_info('\n'.join([
+            u'请求',
             u'   Method     : %s' % self.__response.request.method,
             u'   URL        : %s' % url,
             u'   Cookies    : %s' % self.__response.request._cookies._cookies,
             u'   Headers    : %s' % self.__response.request.headers,
             u'   Body       : %s' % body
         ]))
-        print('\n'.join([
-            u'== 响应 == ',
+        print_info('\n'.join([
+            u'响应',
             u'   Status Code: %s' % self.__response.status_code,
             u'   Headers    : %s' % self.__response.headers,
-            u'   Body       : %s' % self.__response.content
+            u'   Body       : %s' % self.__response.content.decode()
         ]))
         return True
 
@@ -546,7 +674,7 @@ class HKeywords(object):
         elif smart_key.startswith("cookies"):
             smart_value = self.__response.cookies
         else:
-            print(u'指定的检查路径 %s 不存在' % smart_key)
+            print_info(u'指定的检查路径 %s 不存在' % smart_key)
             raise KeyError
         for sk in smart_key.split('.')[1:]:
             try:
@@ -554,20 +682,20 @@ class HKeywords(object):
             except TypeError:
                 smart_value = smart_value[int(sk)]
             except KeyError:
-                print(u'指定的检查路径 %s 下的 %s 不存在' % (smart_key, sk))
+                print_info(u'指定的检查路径 %s 下的 %s 不存在' % (smart_key, sk))
                 raise KeyError
         return smart_value
 
     def kw_response_get_value(self, smart_key, var_name):
         """内置.接口.响应.取值"""
-        print(u'获取 %s 的值并赋予 %s' % (smart_key, var_name))
+        print_info(u'获取 %s 的值并赋予 %s' % (smart_key, var_name))
         self.__variables[var_name] = self.__get_response_smart_value(smart_key)
-        print(u'%s=%s' % (var_name, self.__variables[var_name]))
+        print_info(u'%s=%s' % (var_name, self.__variables[var_name]))
         return True
 
     def kw_response_assert(self, smart_key, assert_key, expected_value):
         """内置.接口.响应.断言"""
-        print(u'检查 %s 是否符合预期值 %s' % (smart_key, expected_value))
+        print_info(u'检查 %s 是否符合预期值 %s' % (smart_key, expected_value))
         smart_value = self.__get_response_smart_value(smart_key)
         if type(smart_value) is int:
             smart_expected_value = int(float(expected_value))
@@ -599,7 +727,7 @@ class HKeywords(object):
         self.__ssh_output = ssh_output['stdout']
         try:
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            print('%s@%s %s' % (user, host, cmd))
+            print_info('%s@%s %s' % (user, host, cmd))
             ssh.connect(
                 hostname=host,
                 port=22,
@@ -612,7 +740,7 @@ class HKeywords(object):
             self.__ssh_output = stdout.read().decode('utf-8')
         finally:
             ssh.close()
-        print(self.__ssh_output)
+        print_info(self.__ssh_output)
         return True
 
 
