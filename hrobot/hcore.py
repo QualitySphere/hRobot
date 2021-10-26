@@ -104,19 +104,19 @@ class HRobot(object):
         for i in range(1, 100):
             sheet_case.row_dimensions[i].height = 26
         sheet_case.column_dimensions['A'].width = 24
-        sheet_case.column_dimensions['B'].width = 32
-        sheet_case.column_dimensions['C'].width = 14
-        sheet_case.column_dimensions['D'].width = 24
+        sheet_case.column_dimensions['B'].width = 14
+        sheet_case.column_dimensions['C'].width = 32
+        sheet_case.column_dimensions['D'].width = 14
         sheet_case.column_dimensions['E'].width = 24
         sheet_case.column_dimensions['F'].width = 24
         sheet_case.column_dimensions['G'].width = 24
         sheet_case.column_dimensions['H'].width = 24
         sheet_case.append(self.env['TESTCASES_HEADERS'][sheet_name])
-        ###########
-        # ## DEBUG ##
-        # sheet_case.append([u'case', u'', u'内置', u'打印日志', u'我是一个测试'])
-        # sheet_case.append([u'case2', u'', u'远程', u'执行', u'我是一个测试'])
-        ###########
+        # Demo Start #
+        sheet_case.append([u'Demo演示', 'demo', u'用于给初学者的展示', u'内置', u'打印日志', u'这是一个演示用的用例'])
+        sheet_case.append(['', '', '', u'接口', 'GET', 'https://QualitySphere.gitee.io'])
+        sheet_case.append(['', '', '', u'接口', u'响应.断言', 'status_code', '=', '200'])
+        # Demo End #
         # 完成 定义 Sheet 用例
 
         # 开始 定义 Sheet 变量

@@ -8,6 +8,7 @@ from robot.api import logger
 import re
 import os
 import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 # from selenium import webdriver
 import json
 # import platform
@@ -75,6 +76,7 @@ class HttpRequests(object):
     """关键字"""
     def __init__(self):
         """接口"""
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         self.__session = None
         self.__response = None
         self.__variables = dict()
@@ -94,16 +96,14 @@ class HttpRequests(object):
             self.__session.close()
         return True
 
-    def request_get(self, url, headers, params=None, cookies=None):
+    def request_get(self, url, headers=None, params=None, cookies=None):
         """GET"""
-        # url = self.__smart_content(url)
-        # headers = json.loads(self.__smart_content(headers))
-        # params = json.loads(self.__smart_content(params))
         self.request_open()
         self.__response = None
         if headers is None:
             headers = {
-                "Content-Type": "Application/json"
+                "Content-Type": "Application/json",
+                "User-Agent": "Hybrid Robot",
             }
         print_info('\n'.join([
             u'请求',
