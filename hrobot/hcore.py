@@ -327,6 +327,9 @@ class HRobot(object):
             case_description = row_data[sheet_header[u'用例描述']].value
             if not case_description:
                 case_description = ''
+            case_tags = row_data[sheet_header[u'标签']].value
+            if not case_tags:
+                case_tags = ''
             # 如果测试用例数据尚无记录，或者A列不为空且用例标题与记录中最后一个不同，就初始化一个新的用例记录，虽然可以简单粗暴的在 .robot 加空行，但似乎这样处理更美观，待后续再看看有无更好的方案
             if len(robot_json['testcases']) == 0 or \
                     case_title and case_title != robot_json['testcases'][-1]['title']:
@@ -334,6 +337,7 @@ class HRobot(object):
                 robot_json['testcases'].append({
                     'title': case_title,
                     'description': case_description,
+                    'tags': case_tags.split(','),
                     'steps': []
                 })
             # 完成处理 用例标题 和 用例描述
@@ -445,6 +449,7 @@ class HRobot(object):
                 robot_testcases,
                 tc['title'],
                 u'\t[Documentation]\t%s' % tc['description'],
+                u'\t[Tags]\t%s' % '\t'.join(tc['tags']),
                 u'\t%s' % robot_steps
             ])
         robot_keywords = '*** Keywords ***'
