@@ -60,20 +60,21 @@ def cmd_init(sys_args):
 
 def cmd_run(sys_args):
     _args = {
-        "testcase": "",
-        "log": "",
-        "report": "",
+        "suite": None,
+        "case": None,
+        "tag": None,
+        "debug": False,
     }
     try:
-        for opt, arg in getopt.getopt(sys_args[2:], "c:v:k:")[0]:
-            if opt == '-c':
-                _args['testcase'] = arg
-            elif opt == '-l':
-                _args['log'] = arg
-            elif opt == '-r':
-                _args['report'] = arg
+        for opt, arg in getopt.getopt(sys_args[2:], "s:c:t:d")[0]:
+            if opt == '-s':
+                _args['suite'] = arg
+            elif opt == '-c':
+                _args['case'] = arg
+            elif opt == '-t':
+                _args['tag'] = arg
             elif opt == '-d':
-                _args['debug'] = arg
+                _args['debug'] = True
     except getopt.GetoptError:
         help_doc_run(sys_args)
     _robot = hcore.HRobot()

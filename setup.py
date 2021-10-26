@@ -21,10 +21,10 @@ PLATFORMS = [
     'any',
 ]
 REQUIRES = [
-    'xlrd==1.2.0',
-    'xlwt==1.3.0',
+    'openpyxl==3.0.9',
     'robotframework>=4.0.0',
     'allure-robotframework>=2.9.0',
+    'requests>=2.22.0',
     'selenium>=3.14.0',
     'paramiko>=2.7.0',
     'PyYAML>=5.4.1',

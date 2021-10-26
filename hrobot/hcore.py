@@ -571,7 +571,7 @@ class HRobot(object):
         os.mkdir(os.path.join(robot_path, self.env['VARIABLES_DIR']))
         self.cls_to_robot_builtin_keyword()
         for case_file in os.listdir(os.path.join(self.env['WORKDIR'], self.env['TESTCASES_DIR'])):
-            if str(case_file).split('.')[-1] not in ['xlsx', 'xlsm', 'xltx', 'xltm']:
+            if str(case_file).split('.')[-1] not in ['xlsx', 'xlsm', 'xltx', 'xltm'] or str(case_file).startswith('~'):
                 continue
             print(u'开始解析 %s' % case_file)
             xl_case_file = os.path.join(self.env['WORKDIR'], self.env['TESTCASES_DIR'], case_file)
@@ -595,16 +595,54 @@ class HRobot(object):
                     print(u'加载可用关键字 %s:%s' % (keyword_lib, keyword_name))
             # 更新完成
         allure_results_dir = os.path.join(robot_path, self.env['OUTPUT_DIR'], 'allure-results')
-        robot.run(
-            self.env['ROBOT_DIR'],
-            consolewidth=80,
-            consolecolors='on',
-            outputdir=os.path.join(robot_path, self.env['OUTPUT_DIR']),
-            # listener='hrobot.Listener.allure_robotframework;%s' % allure_results_dir,
-            listener='allure_robotframework;%s' % allure_results_dir,
-            reporttitle='Hybrid Robot Report',
-            variablefile=os.listdir(os.path.join(robot_path, self.env['VARIABLES_DIR']))
-        )
+        if cmd_args['suite'] and cmd_args['case']:
+            robot.run(
+                self.env['ROBOT_DIR'],
+                consolewidth=80,
+                consolecolors='on',
+                outputdir=os.path.join(robot_path, self.env['OUTPUT_DIR']),
+                listener='allure_robotframework;%s' % allure_results_dir,
+                reporttitle='Hybrid Robot Report',
+                variablefile=os.listdir(os.path.join(robot_path, self.env['VARIABLES_DIR'])),
+                include=[cmd_args['tag']] if cmd_args['tag'] else [],
+                suite=cmd_args['suite'],
+                test=cmd_args['case']
+            )
+        elif cmd_args['suite'] and not cmd_args['case']:
+            robot.run(
+                self.env['ROBOT_DIR'],
+                consolewidth=80,
+                consolecolors='on',
+                outputdir=os.path.join(robot_path, self.env['OUTPUT_DIR']),
+                listener='allure_robotframework;%s' % allure_results_dir,
+                reporttitle='Hybrid Robot Report',
+                variablefile=os.listdir(os.path.join(robot_path, self.env['VARIABLES_DIR'])),
+                include=[cmd_args['tag']] if cmd_args['tag'] else [],
+                suite=cmd_args['suite']
+            )
+        elif not cmd_args['suite'] and cmd_args['case']:
+            robot.run(
+                self.env['ROBOT_DIR'],
+                consolewidth=80,
+                consolecolors='on',
+                outputdir=os.path.join(robot_path, self.env['OUTPUT_DIR']),
+                listener='allure_robotframework;%s' % allure_results_dir,
+                reporttitle='Hybrid Robot Report',
+                variablefile=os.listdir(os.path.join(robot_path, self.env['VARIABLES_DIR'])),
+                include=[cmd_args['tag']] if cmd_args['tag'] else [],
+                test=cmd_args['case']
+            )
+        elif not cmd_args['suite'] and not cmd_args['case']:
+            robot.run(
+                self.env['ROBOT_DIR'],
+                consolewidth=80,
+                consolecolors='on',
+                outputdir=os.path.join(robot_path, self.env['OUTPUT_DIR']),
+                listener='allure_robotframework;%s' % allure_results_dir,
+                reporttitle='Hybrid Robot Report',
+                variablefile=os.listdir(os.path.join(robot_path, self.env['VARIABLES_DIR'])),
+                include=[cmd_args['tag']] if cmd_args['tag'] else []
+            )
         if os.path.exists(allure_results_dir):
             with open(os.path.join(allure_results_dir, 'environment.properties'), 'w', encoding='utf-8') as f:
                 f.write('\n'.join([
