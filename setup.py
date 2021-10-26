@@ -26,7 +26,8 @@ REQUIRES = [
     'robotframework>=4.0.0',
     'allure-robotframework>=2.9.0',
     'selenium>=3.14.0',
-    'paramiko>=2.7.0'
+    'paramiko>=2.7.0',
+    'PyYAML>=5.4.1',
 ]
 CONSOLE_SCRIPTS = 'hrobot = hrobot.hcmd:main'
 
