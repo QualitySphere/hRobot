@@ -241,7 +241,8 @@ class SshRemote(object):
             )
             stdin, stdout, stderr = ssh.exec_command(cmd)
             __ssh_error = stderr.read().decode('utf-8')
-            assert not __ssh_error, u'远程执行命令有误:\n%s' % __ssh_error
+            # assert not __ssh_error, u'远程执行命令有误:\n%s' % __ssh_error
+            assert stdout.channel.recv_exit_status() == 0, u'远程执行命令有误:\n%s' % __ssh_error
             __ssh_out = stdout.read().decode('utf-8')
         finally:
             ssh.close()
