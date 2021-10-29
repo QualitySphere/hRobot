@@ -257,7 +257,6 @@ class HRobot(object):
         :return:
         """
         book = load_workbook(xl_file)
-        # book = xlrd.open_workbook(xl_file)
         robot_file_name_prefix = os.path.basename(xl_file).split('.')[0]
         robot_file = os.path.join(
             self.env['WORKDIR'],
@@ -576,23 +575,15 @@ class HRobot(object):
             print(u'开始解析 %s' % case_file)
             xl_case_file = os.path.join(self.env['WORKDIR'], self.env['TESTCASES_DIR'], case_file)
             self.xl_to_robot_case(xl_case_file)
-            # 更新用例 Excel 中 可用关键字 列表
+            # 删除重建 Excel 中 可用关键字 sheet ，重新加载 可用关键字
+            sheet_name = self.env['TESTCASES_SHEETS'][4]
             book = load_workbook(xl_case_file)
-            sheet_keywords = book[u'可用关键字']
-            keyword_row = 1
-            for kw_cls_name in hkeywords.__dict__.keys():
-                if hkeywords.__dict__[kw_cls_name].__doc__ != u"关键字":
-                    continue
-                kw_cls = hkeywords.__dict__[kw_cls_name]()
-                keyword_lib = inspect.getdoc(kw_cls.__init__)
-                for kw_fun_name in kw_cls.__dir__():
-                    if kw_fun_name.startswith('_'):
-                        continue
-                    keyword_name = inspect.getdoc(kw_cls.__getattribute__(kw_fun_name))
-                    keyword_row += 1
-                    sheet_keywords.cell(keyword_row, 1).value = keyword_lib
-                    sheet_keywords.cell(keyword_row, 2).value = keyword_name
-                    print(u'加载可用关键字 %s:%s' % (keyword_lib, keyword_name))
+            sheet_keyword = book[sheet_name]
+            book.remove(sheet_keyword)
+            sheet_keyword = book.create_sheet(sheet_name, 4)
+            sheet_keyword.append(self.env['TESTCASES_HEADERS'][sheet_name])
+            self.__reload_hrobot_keywords_to_xl_sheet(sheet_keyword)
+            book.save(xl_case_file)
             # 更新完成
         allure_results_dir = os.path.join(robot_path, self.env['OUTPUT_DIR'], 'allure-results')
         if cmd_args['suite'] and cmd_args['case']:
