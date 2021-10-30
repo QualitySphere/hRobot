@@ -35,42 +35,70 @@ hrobot init -p <projectName>
 ```text
 <projectName>
 ├── testcases
-│   └── suites.xls
+│   └── suites.xlsx
 ├── keywords
-│   └── keywords.xls
+│   └── keywords.xlsx
 └── variables
-    └── variables.xls
+    └── variables.xlsx
 ```
+
+*PS: keywords 和 variables 暂无实际作用*  
 
 #### 编写测试用例 
 
-通过 Excel 打开 testcases 目录中的 suites.xls 文件，按照定义好的列进行填写
+通过 Excel 打开 testcases 目录中的 suite.xlsx 文件，有 5 个 Sheet，每个 Sheet 有自己的表头:
+
+- 用例
+
+  <br>|A|B|C|D|E|F|G|H
+  ----|----|----|----|----|----|----|----|----
+  1|用例标题|标签|用例描述|关键字库|关键字|参数|
+  
+- 变量
+
+  <br>|A|B|C
+  ----|----|----|----
+  1|变量类型|变量名|变量值
+  
+- 前置
+
+  <br>|A|B|C
+  ----|----|----|----
+  1|关键字库|关键字|参数
+
+- 后置
+
+  <br>|A|B|C
+  ----|----|----|----
+  1|关键字库|关键字|参数
+  
+- 可用关键字
+
+  <br>|A|B|C
+  ----|----|----|----
+  1|关键字库|关键字|参数
 
 例子：
 
-用例标题|关键字类型|关键字|参数| | | |
-----|----|----|----|----|----|----
-SSH远程后再调用 HTTP 接口 | 内置 | 远程.执行 | root | password | whoami
-<ba> | 内置 | 接口.GET | https://xxx/api/info | {"Content-Type":"application/json"}
-HTTP 接口请求后断言 | 内置 | 接口.POST | https://xxx/api/products | {"Content-Type":"application/json | {"project_owner":"jing"}
-<ba> | 内置 | 接口.响应.断言 | status_code | 等于 | 200
-<ba> | 内置 | 接口.响应.断言 | body.data.0.name | 等于 | hrobot
-HTTP 返回值获取 | 内置 | 接口.POST | https://xxx/api/login | {"Content-Type":"application/json"} | {"username":"jing"}
-<ba> | 内置 | 接口.响应.取值 | body.token | AUTH
-<ba> | 内置 | 接口.GET | https://xxx/api/info | {"Content-Type":"application/json","Authorization":"{{AUTH}}"} 
-<ba> | 内置 | 接口.响应.断言 | status_code | 等于 | 200
-<ba> | 内置 | 接口.响应.断言 | body.username | 等于 | jing
+  <br>|A|B|C|D|E|F|G|H
+  ----|----|----|----|----|----|----|----|---
+  1 |用例标题|标签|用例描述|关键字库|关键字|参数|
+  2 |SSH远程后再调用 HTTP 接口 | 远程 | 执行 | root | password | whoami
+  3 |<br> |接口| GET | https://xxx/api/info | {"Content-Type":"application/json"}
+  4 |HTTP 接口请求后断言 | 接口 | POST | https://xxx/api/products | {"Content-Type":"application/json | {"project_owner":"jing"}
+  5 |<br> | 接口 | 响应.断言 | status_code | 等于 | 200
+  6 |<br> | 接口| 响应.断言 | body.data.0.name | 等于 | hrobot
+  7 |HTTP 返回值获取 | 接口 | POST | https://xxx/api/login | {"Content-Type":"application/json"} | {"username":"jing"}
+  8 |<br> | 接口| 响应.取值 | body.token | AUTH
+  9 |<br> | 接口| GET | https://xxx/api/info | {"Content-Type":"application/json","Authorization":"${AUTH}"} 
+  10|<br> | 接口| 响应.断言 | status_code | 等于 | 200
+  11|<br> | 接口 | 响应.断言 | body.username | 等于 | jing
 
 #### 自定义变量
 
 除了在测试用例执行过程中获取返回值作为变量传递，也可以通过 Excel 打开 variables 目录中的 variables.xls 文件，按照定义好的列进行填写，预先定义一些变量
 
-例子:
-
-变量名|变量类型|变量值
-----|----|----
-NAME|string|于静
-MONTH|int|10
+- 待设计
 
 ### 自定义关键字
 
