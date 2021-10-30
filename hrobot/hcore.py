@@ -8,6 +8,7 @@ from hrobot import hkeywords
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl import styles as xl_style
+from openpyxl.worksheet.datavalidation import DataValidation
 import robot
 from robot import libraries
 from robot.api import logger
@@ -41,6 +42,13 @@ class HRobot(object):
                 u"前置": [u"关键字库", u"关键字", u"参数"],
                 u"后置": [u"关键字库", u"关键字", u"参数"],
                 u"可用关键字": [u"关键字库", u"关键字", u"参数"],
+            },
+            "TESTCASES_COL_WIDTH": {
+                u"用例": [24, 14, 32, 14, 24, 24, 24, 24],
+                u"变量": [12, 32, 32],
+                u"前置": [14, 24, 24],
+                u"后置": [14, 24, 24],
+                u"可用关键字": [14, 24, 24],
             },
             "KEYWORDS_DIR": "keywords",
             "KEYWORDS_SHEETS": [],
@@ -82,21 +90,64 @@ class HRobot(object):
                 xl_sheet.append([keyword_lib, keyword_name])
                 print(u'加载可用关键字 %s.%s' % (keyword_lib, keyword_name))
 
+    @staticmethod
+    def __set_row_height(xl_sheet, max_row):
+        """
+        设置 Sheet 的行高
+        :param xl_sheet:
+        :param max_row:
+        :return:
+        """
+        for i in range(1, max_row):
+            xl_sheet.row_dimensions[i].height = 26
+        return True
+
+    def __set_col_width(self, xl_sheet, width_list):
+        """
+        设置 Sheet 的列宽
+        :param xl_sheet:
+        :param width_list:
+        :return:
+        """
+        cols = ['H', 'G', 'F', 'E', 'D', 'C', 'B', 'A']
+        for col_width in width_list:
+            xl_sheet.column_dimensions[cols.pop()].width = col_width
+
+    def __set_sheet_header(self, xl_sheet):
+        """
+        设置 Sheet 的表头格式
+        :param xl_sheet:
+        :return:
+        """
+        for _cell in xl_sheet[1]:
+            _cell.font = self.book_header_font
+            _cell.fill = self.book_header_pattern_fill
+        return True
+
+    @staticmethod
+    def __set_sheet_data_validation(xl_sheet, xl_lib_col, xl_kw_col):
+        """
+        设置 Sheet 关键字库和关键字的数据验证
+        :param xl_sheet:
+        :param xl_lib_col:
+        :param xl_kw_col:
+        :return:
+        """
+        lib_data_validation = DataValidation(type='list', formula1=u'可用关键字!A:A', allow_blank=True)
+        lib_data_validation.add('%s1:%s1048576' % (xl_lib_col, xl_lib_col))
+        xl_sheet.add_data_validation(lib_data_validation)
+        kw_data_validation = DataValidation(type='list', formula1=u'可用关键字!B:B', allow_blank=True)
+        kw_data_validation.add('%s1:%s1048576' % (xl_kw_col, xl_kw_col))
+        xl_sheet.add_data_validation(kw_data_validation)
+        return True
+
     def generate_testcase_xl(self, xl_file):
         book = Workbook()
         # 开始 定义 Sheet 用例
         sheet_name = self.env['TESTCASES_SHEETS'][0]
         sheet_case = book.create_sheet(sheet_name, 0)
-        for i in range(1, 100):
-            sheet_case.row_dimensions[i].height = 26
-        sheet_case.column_dimensions['A'].width = 24
-        sheet_case.column_dimensions['B'].width = 14
-        sheet_case.column_dimensions['C'].width = 32
-        sheet_case.column_dimensions['D'].width = 14
-        sheet_case.column_dimensions['E'].width = 24
-        sheet_case.column_dimensions['F'].width = 24
-        sheet_case.column_dimensions['G'].width = 24
-        sheet_case.column_dimensions['H'].width = 24
+        self.__set_row_height(sheet_case, 100)
+        self.__set_col_width(sheet_case, self.env["TESTCASES_COL_WIDTH"][u'用例'])
         sheet_case.append(self.env['TESTCASES_HEADERS'][sheet_name])
         # Demo Start #
         sheet_case.append([u'Demo演示', 'demo', u'用于给初学者的展示', u'内置', u'打印日志', u'这是一个演示用的用例'])
@@ -108,40 +159,32 @@ class HRobot(object):
             for _cell in sheet_case[_col]:
                 _cell.font = self.book_font
                 _cell.alignment = self.book_alignment
-        for _cell in sheet_case[1]:
-            _cell.font = self.book_header_font
-            _cell.fill = self.book_header_pattern_fill
+        self.__set_sheet_header(sheet_case)
+        self.__set_sheet_data_validation(sheet_case, 'D', 'E')
+        sheet_case.freeze_panes = 'F2'
         # 完成设置单元格样式
         # 完成 定义 Sheet 用例
 
         # 开始 定义 Sheet 变量
         sheet_name = self.env['TESTCASES_SHEETS'][1]
         sheet_variables = book.create_sheet(sheet_name, 1)
-        for i in range(1, 50):
-            sheet_variables.row_dimensions[i].height = 26
-        sheet_variables.column_dimensions['A'].width = 12
-        sheet_variables.column_dimensions['B'].width = 32
-        sheet_variables.column_dimensions['C'].width = 32
+        self.__set_row_height(sheet_variables, 50)
+        self.__set_col_width(sheet_variables, self.env["TESTCASES_COL_WIDTH"][u'变量'])
         sheet_variables.append(self.env['TESTCASES_HEADERS'][sheet_name])
         # 开始设置单元格样式
         for _col in 'ABC':
             for _cell in sheet_variables[_col]:
                 _cell.font = self.book_font
                 _cell.alignment = self.book_alignment
-        for _cell in sheet_variables[1]:
-            _cell.font = self.book_header_font
-            _cell.fill = self.book_header_pattern_fill
+        self.__set_sheet_header(sheet_variables)
         # 完成设置单元格样式
         # 完成 定义 Sheet 变量
 
         # 开始 定义 Sheet 前置
         sheet_name = self.env['TESTCASES_SHEETS'][2]
         sheet_setup = book.create_sheet(sheet_name, 2)
-        for i in range(1, 20):
-            sheet_setup.row_dimensions[i].height = 26
-        sheet_setup.column_dimensions['A'].width = 14
-        sheet_setup.column_dimensions['B'].width = 24
-        sheet_setup.column_dimensions['C'].width = 24
+        self.__set_row_height(sheet_setup, 20)
+        self.__set_col_width(sheet_setup, self.env["TESTCASES_COL_WIDTH"][u'前置'])
         sheet_setup.append(self.env['TESTCASES_HEADERS'][sheet_name])
         sheet_setup.append([u'内置', u'打印日志', u'测试用例集执行前的准备工作'])
         # 开始设置单元格样式
@@ -149,20 +192,16 @@ class HRobot(object):
             for _cell in sheet_setup[_col]:
                 _cell.font = self.book_font
                 _cell.alignment = self.book_alignment
-        for _cell in sheet_setup[1]:
-            _cell.font = self.book_header_font
-            _cell.fill = self.book_header_pattern_fill
+        self.__set_sheet_header(sheet_setup)
+        self.__set_sheet_data_validation(sheet_setup, 'A', 'B')
         # 完成设置单元格样式
         # 完成 定义 Sheet 前置
 
         # 开始 定义 Sheet 后置
         sheet_name = self.env['TESTCASES_SHEETS'][3]
         sheet_teardown = book.create_sheet(sheet_name, 3)
-        for i in range(1, 20):
-            sheet_teardown.row_dimensions[i].height = 26
-        sheet_teardown.column_dimensions['A'].width = 14
-        sheet_teardown.column_dimensions['B'].width = 24
-        sheet_teardown.column_dimensions['C'].width = 24
+        self.__set_row_height(sheet_teardown, 20)
+        self.__set_col_width(sheet_teardown, self.env["TESTCASES_COL_WIDTH"][u'后置'])
         sheet_teardown.append(self.env['TESTCASES_HEADERS'][sheet_name])
         sheet_teardown.append([u'内置', u'打印日志', u'测试用例集执行前的清理工作'])
         # 开始设置单元格样式
@@ -170,18 +209,15 @@ class HRobot(object):
             for _cell in sheet_teardown[_col]:
                 _cell.font = self.book_font
                 _cell.alignment = self.book_alignment
-        for _cell in sheet_teardown[1]:
-            _cell.font = self.book_header_font
-            _cell.fill = self.book_header_pattern_fill
+        self.__set_sheet_header(sheet_teardown)
+        self.__set_sheet_data_validation(sheet_teardown, 'A', 'B')
         # 完成设置单元格样式
         # 完成 定义 Sheet 后置
 
         # 开始 定义 Sheet 可用关键字
         sheet_name = self.env['TESTCASES_SHEETS'][4]
         sheet_keyword = book.create_sheet(sheet_name, 4)
-        sheet_keyword.column_dimensions['A'].width = 14
-        sheet_keyword.column_dimensions['B'].width = 24
-        sheet_keyword.column_dimensions['C'].width = 24
+        self.__set_col_width(sheet_keyword, self.env["TESTCASES_COL_WIDTH"][u'可用关键字'])
         sheet_keyword.append(self.env['TESTCASES_HEADERS'][sheet_name])
         # 提取出 hRobot 中可用的关键字列表
         self.__reload_hrobot_keywords_to_xl_sheet(sheet_keyword)
@@ -191,11 +227,8 @@ class HRobot(object):
             for _cell in sheet_keyword[_col]:
                 _cell.font = self.book_font
                 _cell.alignment = self.book_alignment
-        for _cell in sheet_keyword[1]:
-            _cell.font = self.book_header_font
-            _cell.fill = self.book_header_pattern_fill
-        for i in range(1, sheet_keyword.max_row + 1):
-            sheet_keyword.row_dimensions[i].height = 26
+        self.__set_sheet_header(sheet_keyword)
+        self.__set_row_height(sheet_keyword, sheet_keyword.max_row + 1)
         # 完成设置单元格样式
         # 完成 定义 Sheet 可用关键字
 
@@ -631,23 +664,17 @@ class HRobot(object):
             sheet_keyword = book[sheet_name]
             book.remove(sheet_keyword)
             sheet_keyword = book.create_sheet(sheet_name, 4)
-            sheet_keyword.column_dimensions['A'].width = 14
-            sheet_keyword.column_dimensions['B'].width = 24
-            sheet_keyword.column_dimensions['C'].width = 24
+            self.__set_col_width(sheet_keyword, self.env["TESTCASES_COL_WIDTH"][u'可用关键字'])
             sheet_keyword.append(self.env['TESTCASES_HEADERS'][sheet_name])
             self.__reload_hrobot_keywords_to_xl_sheet(sheet_keyword)
             for _col in 'ABC':
                 for _cell in sheet_keyword[_col]:
                     _cell.font = self.book_font
                     _cell.alignment = self.book_alignment
-            for _cell in sheet_keyword[1]:
-                _cell.font = self.book_header_font
-                _cell.fill = self.book_header_pattern_fill
-            for i in range(1, sheet_keyword.max_row + 1):
-                sheet_keyword.row_dimensions[i].height = 26
+            self.__set_sheet_header(sheet_keyword)
+            self.__set_row_height(sheet_keyword, sheet_keyword.max_row + 1)
             book.save(xl_case_file)
             # 更新完成
-            # 完成 定义 Sheet 可用关键字
         allure_results_dir = os.path.join(robot_path, self.env['OUTPUT_DIR'], 'allure-results')
         if cmd_args['suite'] and cmd_args['case']:
             robot.run(
