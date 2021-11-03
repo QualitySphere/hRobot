@@ -193,21 +193,32 @@ class HRobot(object):
         )
         lib_data_validation.add('%s2:%s1048576' % (xl_lib_col, xl_lib_col))
         xl_sheet.add_data_validation(lib_data_validation)
-        kw_data_validation = DataValidation(
+        for xl_kw_row in range(2, 500):
+            kw_data_validation = DataValidation(
+                type='list',
+                formula1='INDIRECT(%s%s)' % (xl_lib_col, xl_kw_row),
+                allow_blank=True
+            )
+            kw_data_validation.add('%s%s' % (xl_kw_col, xl_kw_row))
+            xl_sheet.add_data_validation(kw_data_validation)
+        return True
+
+    @staticmethod
+    def __set_sheet_data_validation_for_variable_type(xl_sheet):
+        var_type_data_validation = DataValidation(
             type='list',
-            formula1=u'可用关键字',
+            formula1='"str,int,list,dict"',
             allow_blank=True
         )
-        kw_data_validation.add('%s2:%s1048576' % (xl_kw_col, xl_kw_col))
-        xl_sheet.add_data_validation(kw_data_validation)
-        return True
+        var_type_data_validation.add('A2:A50')
+        xl_sheet.add_data_validation(var_type_data_validation)
 
     def generate_testcase_xl(self, xl_file):
         book = Workbook()
         # 开始 定义 Sheet 用例
         sheet_name = self.env['TESTCASES_SHEETS'][0]
         sheet_case = book.create_sheet(sheet_name, 0)
-        self.__set_row_height(sheet_case, 100)
+        self.__set_row_height(sheet_case, 500)
         self.__set_col_width(sheet_case, self.env["TESTCASES_COL_WIDTH"][u'用例'])
         sheet_case.append(self.env['TESTCASES_HEADERS'][sheet_name])
         # Demo Start #
@@ -216,7 +227,7 @@ class HRobot(object):
         sheet_case.append(['', '', '', u'接口', u'响应.断言', 'status_code', '=', '200'])
         # Demo End #
         # 开始设置单元格样式
-        self.__set_sheet_cell(sheet_case, 'ABCDEFGH')
+        self.__set_sheet_cell(sheet_case, 'ABCDEFGHI')
         self.__set_sheet_header(sheet_case)
         sheet_case.freeze_panes = 'F2'
         # 完成设置单元格样式
@@ -237,7 +248,7 @@ class HRobot(object):
         # 开始 定义 Sheet 前置
         sheet_name = self.env['TESTCASES_SHEETS'][2]
         sheet_setup = book.create_sheet(sheet_name, 2)
-        self.__set_row_height(sheet_setup, 20)
+        self.__set_row_height(sheet_setup, 50)
         self.__set_col_width(sheet_setup, self.env["TESTCASES_COL_WIDTH"][u'前置'])
         sheet_setup.append(self.env['TESTCASES_HEADERS'][sheet_name])
         sheet_setup.append([u'内置', u'打印日志', u'测试用例集执行前的准备工作'])
@@ -250,7 +261,7 @@ class HRobot(object):
         # 开始 定义 Sheet 后置
         sheet_name = self.env['TESTCASES_SHEETS'][3]
         sheet_teardown = book.create_sheet(sheet_name, 3)
-        self.__set_row_height(sheet_teardown, 20)
+        self.__set_row_height(sheet_teardown, 50)
         self.__set_col_width(sheet_teardown, self.env["TESTCASES_COL_WIDTH"][u'后置'])
         sheet_teardown.append(self.env['TESTCASES_HEADERS'][sheet_name])
         sheet_teardown.append([u'内置', u'打印日志', u'测试用例集执行前的清理工作'])
@@ -280,6 +291,7 @@ class HRobot(object):
         self.__set_sheet_data_validation(sheet_case, 'D', 'E', keyword_index)
         self.__set_sheet_data_validation(sheet_setup, 'A', 'B', keyword_index)
         self.__set_sheet_data_validation(sheet_teardown, 'A', 'B', keyword_index)
+        self.__set_sheet_data_validation_for_variable_type(sheet_variables)
         # 完成数据验证配置和定义名称
 
         book.save(xl_file)
@@ -721,12 +733,13 @@ class HRobot(object):
             self.__define_names_for_keywords(book, keyword_index)
             self.__set_sheet_data_validation(book[u'用例'], 'D', 'E', keyword_index)
             self.__set_sheet_data_validation(book[u'前置'], 'A', 'B', keyword_index)
-            self.__set_sheet_data_validation(book[U'后置'], 'A', 'B', keyword_index)
+            self.__set_sheet_data_validation(book[u'后置'], 'A', 'B', keyword_index)
+            self.__set_sheet_data_validation_for_variable_type(book[u'变量'])
             # 完成数据验证配置和定义名称
             self.__set_sheet_cell(sheet_keyword, 'ABCDEF')
             self.__set_sheet_header(sheet_keyword)
             self.__set_row_height(sheet_keyword, sheet_keyword.max_row + 1)
-            self.__set_sheet_cell(book[u'用例'], 'ABCDEFGH')
+            self.__set_sheet_cell(book[u'用例'], 'ABCDEFGHI')
             self.__set_sheet_header(book[u'用例'])
             self.__set_sheet_cell(book[u'变量'], 'ABC')
             self.__set_sheet_header(book[u'变量'])
