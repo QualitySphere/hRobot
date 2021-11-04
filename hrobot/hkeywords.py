@@ -221,6 +221,49 @@ class SshRemote(object):
         """远程"""
         pass
 
+    def ssh_push(self, host, user, password, local_path, remote_path):
+        """上传"""
+        transport = paramiko.Transport(sock=(host, 22))
+        transport.connect(username=user, password=password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        if os.path.isdir(local_path):
+            print_info(u'上传目录 %s 到 %s:%s' % (local_path, host, remote_path))
+            for _f in os.listdir(local_path):
+                __local_path = os.path.join(local_path, _f)
+                __remote_path = os.path.join(remote_path, _f)
+                print_info(u'上传文件 %s 到 %s:%s' % (__local_path, host, __remote_path))
+                if os.path.isfile(__local_path):
+                    sftp.put(localpath=__local_path, remotepath=__remote_path)
+        else:
+            print_info(u'上传文件 %s 到 %s:%s' % (local_path, host, remote_path))
+            sftp.put(localpath=local_path, remotepath=remote_path)
+        # try:
+        #     if os.path.isdir(local_path):
+        #         print_info(u'上传目录 %s 到 %s:%s' % (local_path, host, remote_path))
+        #         for _f in os.listdir():
+        #             if os.path.isfile(os.path.join(local_path, _f)):
+        #                 sftp.put(localpath=os.path.join(local_path, _f), remotepath=os.path.join(remote_path, _f))
+        #     else:
+        #         print_info(u'上传文件 %s 到 %s:%s' % (local_path, host, remote_path))
+        #         sftp.put(localpath=local_path, remotepath=remote_path)
+        # finally:
+        sftp.close()
+        transport.close()
+        return True
+
+    def ssh_pull(self, host, user, password, remote_path, local_path):
+        """下载"""
+        transport = paramiko.Transport(sock=(host, 22))
+        transport.connect(username=user, password=password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        try:
+            print_info(u'下载文件 %s:%s 到 %s' % (host, remote_path, local_path))
+            sftp.get(remotepath=remote_path, localpath=local_path)
+        finally:
+            sftp.close()
+            transport.close()
+        return True
+
     def ssh_exec(self, host, user, password, cmd):
         """执行"""
         ssh = paramiko.SSHClient()
@@ -232,7 +275,7 @@ class SshRemote(object):
         __ssh_out = ssh_output['stdout']
         try:
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            logger.info('%s@%s %s' % (user, host, cmd))
+            print_info('%s@%s %s' % (user, host, cmd))
             ssh.connect(
                 hostname=host,
                 port=22,
@@ -246,7 +289,7 @@ class SshRemote(object):
             __ssh_out = stdout.read().decode('utf-8')
         finally:
             ssh.close()
-        logger.info(__ssh_out)
+        print_info(__ssh_out)
         return True
 
 

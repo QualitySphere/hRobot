@@ -83,16 +83,16 @@ hrobot init -p <projectName>
   <br>|A|B|C|D|E|F|G|H
   ----|----|----|----|----|----|----|----|---
   1 |用例标题|标签|用例描述|关键字库|关键字|参数|
-  2 |SSH远程后再调用 HTTP 接口 | 远程 | 执行 | root | password | whoami
-  3 |<br> |接口| GET | https://xxx/api/info | {"Content-Type":"application/json"}
-  4 |HTTP 接口请求后断言 | 接口 | POST | https://xxx/api/products | {"Content-Type":"application/json | {"project_owner":"jing"}
-  5 |<br> | 接口 | 响应.断言 | status_code | 等于 | 200
-  6 |<br> | 接口| 响应.断言 | body.data.0.name | 等于 | hrobot
-  7 |HTTP 返回值获取 | 接口 | POST | https://xxx/api/login | {"Content-Type":"application/json"} | {"username":"jing"}
-  8 |<br> | 接口| 响应.取值 | body.token | AUTH
-  9 |<br> | 接口| GET | https://xxx/api/info | {"Content-Type":"application/json","Authorization":"${AUTH}"} 
-  10|<br> | 接口| 响应.断言 | status_code | 等于 | 200
-  11|<br> | 接口 | 响应.断言 | body.username | 等于 | jing
+  2 |SSH远程后再调用 HTTP 接口 |<br>|<br>| 远程 | 执行 | root | password | whoami
+  3 |<br> |<br>|<br>|接口| GET | https://xxx/api/info | {"Content-Type":"application/json"}
+  4 |HTTP 接口请求后断言 |<br>|<br>| 接口 | POST | https://xxx/api/products | {"Content-Type":"application/json | {"project_owner":"jing"}
+  5 |<br> |<br>|<br>| 接口 | 响应.断言 | status_code | 等于 | 200
+  6 |<br> |<br>|<br>| 接口| 响应.断言 | body.data.0.name | 等于 | hrobot
+  7 |HTTP 返回值获取 |<br>|<br>| 接口 | POST | https://xxx/api/login | {"Content-Type":"application/json"} | {"username":"jing"}
+  8 |<br> |<br>|<br>| 接口| 响应.取值 | body.token | AUTH
+  9 |<br> |<br>|<br>| 接口| GET | https://xxx/api/info | {"Content-Type":"application/json","Authorization":"${AUTH}"} 
+  10|<br> |<br>|<br>| 接口| 响应.断言 | status_code | 等于 | 200
+  11|<br> |<br>|<br>| 接口 | 响应.断言 | body.username | 等于 | jing
 
 #### 自定义变量
 

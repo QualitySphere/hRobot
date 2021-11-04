@@ -45,11 +45,11 @@ class HRobot(object):
                 u"可用关键字": [u"关键字库", u"关键字", u"参数"],
             },
             "TESTCASES_COL_WIDTH": {
-                u"用例": [24, 14, 32, 14, 24, 24, 24, 24],
+                u"用例": [24, 14, 32, 14, 24, 24, 24, 24, 24, 24],
                 u"变量": [12, 32, 32],
-                u"前置": [14, 24, 24, 24, 24],
-                u"后置": [14, 24, 24, 24, 24],
-                u"可用关键字": [14, 24, 24, 24, 24, 24],
+                u"前置": [14, 24, 24, 24, 24, 24, 24],
+                u"后置": [14, 24, 24, 24, 24, 24, 24],
+                u"可用关键字": [14, 24, 24, 24, 24, 24, 24],
             },
             "KEYWORDS_DIR": "keywords",
             "KEYWORDS_SHEETS": [],
@@ -146,7 +146,8 @@ class HRobot(object):
         :param width_list:
         :return:
         """
-        cols = ['H', 'G', 'F', 'E', 'D', 'C', 'B', 'A']
+        cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+        cols.reverse()
         for col_width in width_list:
             xl_sheet.column_dimensions[cols.pop()].width = col_width
 
@@ -227,7 +228,7 @@ class HRobot(object):
         sheet_case.append(['', '', '', u'接口', u'响应.断言', 'status_code', '=', '200'])
         # Demo End #
         # 开始设置单元格样式
-        self.__set_sheet_cell(sheet_case, 'ABCDEFGHI')
+        self.__set_sheet_cell(sheet_case, 'ABCDEFGHIJ')
         self.__set_sheet_header(sheet_case)
         sheet_case.freeze_panes = 'F2'
         # 完成设置单元格样式
@@ -253,7 +254,7 @@ class HRobot(object):
         sheet_setup.append(self.env['TESTCASES_HEADERS'][sheet_name])
         sheet_setup.append([u'内置', u'打印日志', u'测试用例集执行前的准备工作'])
         # 开始设置单元格样式
-        self.__set_sheet_cell(sheet_setup, 'ABCDE')
+        self.__set_sheet_cell(sheet_setup, 'ABCDEF')
         self.__set_sheet_header(sheet_setup)
         # 完成设置单元格样式
         # 完成 定义 Sheet 前置
@@ -266,7 +267,7 @@ class HRobot(object):
         sheet_teardown.append(self.env['TESTCASES_HEADERS'][sheet_name])
         sheet_teardown.append([u'内置', u'打印日志', u'测试用例集执行前的清理工作'])
         # 开始设置单元格样式
-        self.__set_sheet_cell(sheet_teardown, 'ABCDE')
+        self.__set_sheet_cell(sheet_teardown, 'ABCDEF')
         self.__set_sheet_header(sheet_teardown)
         # 完成设置单元格样式
         # 完成 定义 Sheet 后置
@@ -280,7 +281,7 @@ class HRobot(object):
         keyword_index = self.__reload_hrobot_keywords_to_xl_sheet(sheet_keyword)
         # 提取完成
         # 开始设置单元格样式
-        self.__set_sheet_cell(sheet_keyword, 'ABCDEF')
+        self.__set_sheet_cell(sheet_keyword, 'ABCDEFG')
         self.__set_sheet_header(sheet_keyword)
         self.__set_row_height(sheet_keyword, sheet_keyword.max_row + 1)
         # 完成设置单元格样式
@@ -726,7 +727,6 @@ class HRobot(object):
             sheet_keyword = book[sheet_name]
             book.remove(sheet_keyword)
             sheet_keyword = book.create_sheet(sheet_name, 4)
-            self.__set_col_width(sheet_keyword, self.env["TESTCASES_COL_WIDTH"][u'可用关键字'])
             sheet_keyword.append(self.env['TESTCASES_HEADERS'][sheet_name])
             keyword_index = self.__reload_hrobot_keywords_to_xl_sheet(sheet_keyword)
             # 添加数据验证配置和定义名称
@@ -736,17 +736,26 @@ class HRobot(object):
             self.__set_sheet_data_validation(book[u'后置'], 'A', 'B', keyword_index)
             self.__set_sheet_data_validation_for_variable_type(book[u'变量'])
             # 完成数据验证配置和定义名称
-            self.__set_sheet_cell(sheet_keyword, 'ABCDEF')
+            self.__set_sheet_cell(sheet_keyword, 'ABCDEFG')
             self.__set_sheet_header(sheet_keyword)
             self.__set_row_height(sheet_keyword, sheet_keyword.max_row + 1)
-            self.__set_sheet_cell(book[u'用例'], 'ABCDEFGHI')
+            self.__set_col_width(sheet_keyword, self.env["TESTCASES_COL_WIDTH"][u'可用关键字'])
+            self.__set_sheet_cell(book[u'用例'], 'ABCDEFGHIJ')
             self.__set_sheet_header(book[u'用例'])
+            self.__set_row_height(book[u'用例'], book[u'用例'].max_row + 1)
+            self.__set_col_width(book[u'用例'], self.env["TESTCASES_COL_WIDTH"][u'用例'])
             self.__set_sheet_cell(book[u'变量'], 'ABC')
             self.__set_sheet_header(book[u'变量'])
-            self.__set_sheet_cell(book[u'前置'], 'ABCDE')
+            self.__set_row_height(book[u'变量'], book[u'变量'].max_row + 1)
+            self.__set_col_width(book[u'变量'], self.env["TESTCASES_COL_WIDTH"][u'变量'])
+            self.__set_sheet_cell(book[u'前置'], 'ABCDEF')
             self.__set_sheet_header(book[u'前置'])
-            self.__set_sheet_cell(book[u'后置'], 'ABCDE')
+            self.__set_row_height(book[u'前置'], book[u'前置'].max_row + 1)
+            self.__set_col_width(book[u'前置'], self.env["TESTCASES_COL_WIDTH"][u'前置'])
+            self.__set_sheet_cell(book[u'后置'], 'ABCDEF')
             self.__set_sheet_header(book[u'后置'])
+            self.__set_row_height(book[u'后置'], book[u'后置'].max_row + 1)
+            self.__set_col_width(book[u'后置'], self.env["TESTCASES_COL_WIDTH"][u'后置'])
             book.save(xl_case_file)
             # 更新完成
         allure_results_dir = os.path.join(robot_path, self.env['OUTPUT_DIR'], 'allure-results')
