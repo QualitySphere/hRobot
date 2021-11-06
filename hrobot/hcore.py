@@ -109,7 +109,7 @@ class HRobot(object):
 
     @staticmethod
     def __define_names_for_keywords(xl_book, xl_index):
-        index_end_col = 2
+        # index_end_col = 2
         for index_name, index_start_col, index_end_col in xl_index:
             defined_name = DefinedName(
                 index_name,
@@ -118,14 +118,14 @@ class HRobot(object):
             if xl_book.defined_names.get(index_name):
                 xl_book.defined_names.delete(index_name)
             xl_book.defined_names.append(defined_name)
-        index_name = u'可用关键字'
-        defined_name = DefinedName(
-            index_name,
-            attr_text=u"可用关键字!$B$2:$B$%s" % index_end_col
-        )
-        if xl_book.defined_names.get(index_name):
-            xl_book.defined_names.delete(index_name)
-        xl_book.defined_names.append(defined_name)
+        # index_name = u'可用关键字'
+        # defined_name = DefinedName(
+        #     index_name,
+        #     attr_text=u"可用关键字!$B$2:$B$%s" % index_end_col
+        # )
+        # if xl_book.defined_names.get(index_name):
+        #     xl_book.defined_names.delete(index_name)
+        # xl_book.defined_names.append(defined_name)
 
     @staticmethod
     def __set_row_height(xl_sheet, max_row):
@@ -184,6 +184,9 @@ class HRobot(object):
         :param kw_libs:
         :return:
         """
+        for _validation in xl_sheet.data_validations.dataValidation:
+            xl_sheet.data_validations.dataValidation.remove(_validation)
+        max_row = xl_sheet.max_row if xl_sheet.max_row >= 500 else 500
         validation_list = set()
         for item in kw_libs:
             validation_list.add(item[0])
@@ -192,9 +195,9 @@ class HRobot(object):
             formula1='"%s"' % ','.join(validation_list),
             allow_blank=True
         )
-        lib_data_validation.add('%s2:%s1048576' % (xl_lib_col, xl_lib_col))
+        lib_data_validation.add('%s2:%s%s' % (xl_lib_col, xl_lib_col, max_row))
         xl_sheet.add_data_validation(lib_data_validation)
-        for xl_kw_row in range(2, 500):
+        for xl_kw_row in range(2, max_row):
             kw_data_validation = DataValidation(
                 type='list',
                 formula1='INDIRECT(%s%s)' % (xl_lib_col, xl_kw_row),
@@ -722,15 +725,15 @@ class HRobot(object):
             xl_case_file = os.path.join(self.env['WORKDIR'], self.env['TESTCASES_DIR'], case_file)
             self.xl_to_robot_case(xl_case_file)
             # 删除重建 Excel 中 可用关键字 sheet ，重新加载 可用关键字
-            sheet_name = self.env['TESTCASES_SHEETS'][4]
             book = load_workbook(xl_case_file)
-            sheet_keyword = book[sheet_name]
+            sheet_keyword = book[u'可用关键字']
             book.remove(sheet_keyword)
-            sheet_keyword = book.create_sheet(sheet_name, 4)
-            sheet_keyword.append(self.env['TESTCASES_HEADERS'][sheet_name])
+            sheet_keyword = book.create_sheet(u'可用关键字', 4)
+            sheet_keyword.append(self.env['TESTCASES_HEADERS'][u'可用关键字'])
             keyword_index = self.__reload_hrobot_keywords_to_xl_sheet(sheet_keyword)
-            # 添加数据验证配置和定义名称
+            # 添加数据验证定义名称
             self.__define_names_for_keywords(book, keyword_index)
+            # 添加数据验证配置
             self.__set_sheet_data_validation(book[u'用例'], 'D', 'E', keyword_index)
             self.__set_sheet_data_validation(book[u'前置'], 'A', 'B', keyword_index)
             self.__set_sheet_data_validation(book[u'后置'], 'A', 'B', keyword_index)
