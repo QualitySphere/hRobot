@@ -1,9 +1,17 @@
 # Hybrid Robot
+
 基于 RobotFramework 的二次封装
 
 > **警告**
 > 
 > 该方案是对 RobotFramework 的二次封装，以减轻中国用户使用符合欧美用户习惯的原生 RobotFramework 时的不适，因此，该方案并**不适合**所有场景。针对技术能力暂时薄弱、英文能力差的中小团队，可能具有一定的疗效。
+
+[![org](https://img.shields.io/static/v1?style=for-the-badge&label=org&message=Assurance%20Sphere&color=ff582c)](https://will.bowxeon.com)
+![License](https://img.shields.io/github/license/qualitysphere/hrobot?style=for-the-badge)
+![author](https://img.shields.io/static/v1?style=for-the-badge&label=author&message=362639663@qq.com&color=blue)
+![author](https://img.shields.io/static/v1?style=for-the-badge&label=author&message=v.stone@163.com&color=blue)
+[![Python](https://img.shields.io/static/v1?style=for-the-badge&logo=python&label=Python&message=3.8&color=306ba1)](https://docs.python.org/release/3.8.11/)
+[![PyPI](https://img.shields.io/pypi/v/hrobot.svg?style=for-the-badge)](https://pypi.org/project/hrobot/)
 
 ## 重点改造描述
 
