@@ -34,7 +34,7 @@ def print_info(info_string):
 class HRobot(object):
     def __init__(self):
         self.work_dir = os.path.abspath('.')
-        self.robot_dir = os.path.basename(self.work_dir)
+        self.robot_dir = 'workspace'
         self.project_file = '.hrobot'
         self.hrobot_keywords_robot_file = 'hrobot.robot'
         self.output_dir = 'output'
