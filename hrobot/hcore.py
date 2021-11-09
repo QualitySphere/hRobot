@@ -3,6 +3,8 @@
 
 
 # import os
+import os
+
 from hrobot.hkeywords import *
 from hrobot import hkeywords
 from openpyxl import Workbook
@@ -31,41 +33,45 @@ def print_info(info_string):
 
 class HRobot(object):
     def __init__(self):
-        self.env = {
-            "WORKDIR": os.path.abspath('.'),
-            "HROBOT_PROJECT_FILE": ".hrobot",
-            "TESTCASES_DIR": "testcases",
-            "TESTCASES_FILE": "suite.xlsx",
-            "TESTCASES_SHEETS": [u"用例", u"变量", u"前置", u"后置", u"可用关键字"],
-            "TESTCASES_HEADERS": {
-                u"用例": [u"用例标题", u"标签", u"用例描述", u"关键字库", u"关键字", u"参数"],
-                u"变量": [u"变量类型", u"变量名", u"变量值"],
-                u"前置": [u"关键字库", u"关键字", u"参数"],
-                u"后置": [u"关键字库", u"关键字", u"参数"],
-                u"可用关键字": [u"关键字库", u"关键字", u"参数"],
-            },
-            "TESTCASES_COL_WIDTH": {
-                u"用例": [24, 14, 32, 14, 24, 24, 24, 24, 24, 24],
-                u"变量": [12, 32, 32],
-                u"前置": [14, 24, 24, 24, 24, 24, 24],
-                u"后置": [14, 24, 24, 24, 24, 24, 24],
-                u"可用关键字": [14, 24, 24, 24, 24, 24, 24],
-            },
-            "KEYWORDS_DIR": "keywords",
-            "KEYWORDS_SHEETS": [],
-            "KEYWORDS_HEADERS": {
-
-            },
-            "KEYWORDS_FILE": "keywords.xlsx",
-            "VARIABLES_DIR": "variables",
-            "VARIABLES_FILE": "variables.xlsx",
-            "VARIABLES_SHEETS": [],
-            "VARIABLES_HEADERS": {
-
-            },
-            "ROBOT_DIR": os.path.basename(os.path.abspath('.')),
-            "HROBOT_KEYWORDS_ROBOT_FILE": "hrobot.robot",
-            "OUTPUT_DIR": "output",
+        self.work_dir = os.path.abspath('.')
+        self.robot_dir = os.path.basename(self.work_dir)
+        self.project_file = '.hrobot'
+        self.hrobot_keywords_robot_file = 'hrobot.robot'
+        self.output_dir = 'output'
+        self.testcases_dir = 'testcases'
+        self.testcases_file = 'suite.xlsx'
+        self.testcases_sheets = [u"用例", u"变量", u"前置", u"后置", u"可用关键字"]
+        self.testcases_headers = {
+            u"用例": [u"用例标题", u"标签", u"用例描述", u"关键字库", u"关键字", u"参数"],
+            u"变量": [u"变量类型", u"变量名", u"变量值"],
+            u"前置": [u"关键字库", u"关键字", u"参数"],
+            u"后置": [u"关键字库", u"关键字", u"参数"],
+            u"可用关键字": [u"关键字库", u"关键字", u"参数"],
+        }
+        self.testcases_col_width = {
+            u"用例": [24, 14, 32, 14, 24, 24, 24, 24, 24, 24],
+            u"变量": [12, 32, 32],
+            u"前置": [14, 24, 24, 24, 24, 24, 24],
+            u"后置": [14, 24, 24, 24, 24, 24, 24],
+            u"可用关键字": [14, 24, 24, 24, 24, 24, 24],
+        }
+        self.keywords_dir = "keywords"
+        self.keywords_file = "keywords.xlsx"
+        self.keywords_sheets = [u"自定义关键字"]
+        self.keywords_headers = {
+            u"自定义关键字": [u"自定义关键字", u"入参", u"返回", u"关键字库", u"关键字", u"参数"],
+        }
+        self.keywords_col_width = {
+            u"自定义关键字": [24, 14, 32, 14, 24, 24, 24, 24, 24, 24],
+        }
+        self.variables_dir = "variables"
+        self.variables_file = "variables.xlsx"
+        self.variables_sheets = [u"变量"]
+        self.variables_headers = {
+            u"变量": [u"变量类型", u"变量名", u"变量值"],
+        }
+        self.variables_col_width = {
+            u"变量": [12, 32, 32],
         }
         self.book_header_font = xl_style.Font(name=u'黑体', size=12, bold=True)
         self.book_header_pattern_fill = xl_style.PatternFill(patternType='solid', fgColor='bfbfbf')
@@ -78,8 +84,8 @@ class HRobot(object):
         # 提取出 hRobot 中可用的关键字列表
         keyword_index = list()
         keyword_row = 0
-        keyword_start_col = 0
-        keyword_end_col = 0
+        # keyword_start_col = 0
+        # keyword_end_col = 0
         for kw_cls_name in hkeywords.__dict__.keys():
             if hkeywords.__dict__[kw_cls_name].__doc__ != u"关键字":
                 continue
@@ -139,17 +145,18 @@ class HRobot(object):
             xl_sheet.row_dimensions[i].height = 26
         return True
 
-    def __set_col_width(self, xl_sheet, width_list):
+    @staticmethod
+    def __set_col_width(xl_sheet, width_list):
         """
         设置 Sheet 的列宽
         :param xl_sheet:
         :param width_list:
         :return:
         """
-        cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
-        cols.reverse()
+        _col = 65
         for col_width in width_list:
-            xl_sheet.column_dimensions[cols.pop()].width = col_width
+            xl_sheet.column_dimensions[chr(_col)].width = col_width
+            _col += 1
 
     def __set_sheet_header(self, xl_sheet):
         """
@@ -169,8 +176,8 @@ class HRobot(object):
         :param cols:
         :return:
         """
-        for _col in cols:
-            for _cell in xl_sheet[_col]:
+        for _col in range(65, 65 + len(cols)):
+            for _cell in xl_sheet[chr(_col)]:
                 _cell.font = self.book_font
                 _cell.alignment = self.book_alignment
 
@@ -220,71 +227,71 @@ class HRobot(object):
     def generate_testcase_xl(self, xl_file):
         book = Workbook()
         # 开始 定义 Sheet 用例
-        sheet_name = self.env['TESTCASES_SHEETS'][0]
+        sheet_name = self.testcases_sheets[0]
         sheet_case = book.create_sheet(sheet_name, 0)
         self.__set_row_height(sheet_case, 500)
-        self.__set_col_width(sheet_case, self.env["TESTCASES_COL_WIDTH"][u'用例'])
-        sheet_case.append(self.env['TESTCASES_HEADERS'][sheet_name])
+        self.__set_col_width(sheet_case, self.testcases_col_width[sheet_name])
+        sheet_case.append(self.testcases_headers[sheet_name])
         # Demo Start #
         sheet_case.append([u'Demo演示', 'demo', u'用于给初学者的展示', u'内置', u'打印日志', u'这是一个演示用的用例'])
         sheet_case.append(['', '', '', u'接口', 'GET', 'https://QualitySphere.gitee.io'])
         sheet_case.append(['', '', '', u'接口', u'响应.断言', 'status_code', '=', '200'])
         # Demo End #
         # 开始设置单元格样式
-        self.__set_sheet_cell(sheet_case, 'ABCDEFGHIJ')
+        self.__set_sheet_cell(sheet_case, self.testcases_col_width[sheet_name])
         self.__set_sheet_header(sheet_case)
         sheet_case.freeze_panes = 'F2'
         # 完成设置单元格样式
         # 完成 定义 Sheet 用例
 
         # 开始 定义 Sheet 变量
-        sheet_name = self.env['TESTCASES_SHEETS'][1]
+        sheet_name = self.testcases_sheets[1]
         sheet_variables = book.create_sheet(sheet_name, 1)
         self.__set_row_height(sheet_variables, 50)
-        self.__set_col_width(sheet_variables, self.env["TESTCASES_COL_WIDTH"][u'变量'])
-        sheet_variables.append(self.env['TESTCASES_HEADERS'][sheet_name])
+        self.__set_col_width(sheet_variables, self.testcases_col_width[sheet_name])
+        sheet_variables.append(self.testcases_headers[sheet_name])
         # 开始设置单元格样式
-        self.__set_sheet_cell(sheet_variables, 'ABC')
+        self.__set_sheet_cell(sheet_variables, self.testcases_col_width[sheet_name])
         self.__set_sheet_header(sheet_variables)
         # 完成设置单元格样式
         # 完成 定义 Sheet 变量
 
         # 开始 定义 Sheet 前置
-        sheet_name = self.env['TESTCASES_SHEETS'][2]
+        sheet_name = self.testcases_sheets[2]
         sheet_setup = book.create_sheet(sheet_name, 2)
         self.__set_row_height(sheet_setup, 50)
-        self.__set_col_width(sheet_setup, self.env["TESTCASES_COL_WIDTH"][u'前置'])
-        sheet_setup.append(self.env['TESTCASES_HEADERS'][sheet_name])
+        self.__set_col_width(sheet_setup, self.testcases_col_width[sheet_name])
+        sheet_setup.append(self.testcases_headers[sheet_name])
         sheet_setup.append([u'内置', u'打印日志', u'测试用例集执行前的准备工作'])
         # 开始设置单元格样式
-        self.__set_sheet_cell(sheet_setup, 'ABCDEF')
+        self.__set_sheet_cell(sheet_setup, self.testcases_col_width[sheet_name])
         self.__set_sheet_header(sheet_setup)
         # 完成设置单元格样式
         # 完成 定义 Sheet 前置
 
         # 开始 定义 Sheet 后置
-        sheet_name = self.env['TESTCASES_SHEETS'][3]
+        sheet_name = self.testcases_sheets[3]
         sheet_teardown = book.create_sheet(sheet_name, 3)
         self.__set_row_height(sheet_teardown, 50)
-        self.__set_col_width(sheet_teardown, self.env["TESTCASES_COL_WIDTH"][u'后置'])
-        sheet_teardown.append(self.env['TESTCASES_HEADERS'][sheet_name])
+        self.__set_col_width(sheet_teardown, self.testcases_col_width[sheet_name])
+        sheet_teardown.append(self.testcases_headers[sheet_name])
         sheet_teardown.append([u'内置', u'打印日志', u'测试用例集执行前的清理工作'])
         # 开始设置单元格样式
-        self.__set_sheet_cell(sheet_teardown, 'ABCDEF')
+        self.__set_sheet_cell(sheet_teardown, self.testcases_col_width[sheet_name])
         self.__set_sheet_header(sheet_teardown)
         # 完成设置单元格样式
         # 完成 定义 Sheet 后置
 
         # 开始 定义 Sheet 可用关键字
-        sheet_name = self.env['TESTCASES_SHEETS'][4]
+        sheet_name = self.testcases_sheets[4]
         sheet_keyword = book.create_sheet(sheet_name, 4)
-        self.__set_col_width(sheet_keyword, self.env["TESTCASES_COL_WIDTH"][u'可用关键字'])
-        sheet_keyword.append(self.env['TESTCASES_HEADERS'][sheet_name])
+        self.__set_col_width(sheet_keyword, self.testcases_col_width[sheet_name])
+        sheet_keyword.append(self.testcases_headers[sheet_name])
         # 提取出 hRobot 中可用的关键字列表
         keyword_index = self.__reload_hrobot_keywords_to_xl_sheet(sheet_keyword)
         # 提取完成
         # 开始设置单元格样式
-        self.__set_sheet_cell(sheet_keyword, 'ABCDEFG')
+        self.__set_sheet_cell(sheet_keyword, self.testcases_col_width[sheet_name])
         self.__set_sheet_header(sheet_keyword)
         self.__set_row_height(sheet_keyword, sheet_keyword.max_row + 1)
         # 完成设置单元格样式
@@ -297,22 +304,31 @@ class HRobot(object):
         self.__set_sheet_data_validation(sheet_teardown, 'A', 'B', keyword_index)
         self.__set_sheet_data_validation_for_variable_type(sheet_variables)
         # 完成数据验证配置和定义名称
-
         book.save(xl_file)
+        book.close()
 
-    @staticmethod
-    def generate_variable_xl(xl_file):
+    def generate_variable_xl(self, xl_file):
         book = Workbook()
-        sheet = book.create_sheet(u'变量集', 0)
-        sheet.append([u'变量名', u'变量类型', u'变量值'])
+        sheet_name = self.variables_sheets[0]
+        sheet = book.create_sheet(sheet_name, 0)
+        sheet.append(self.variables_headers[sheet_name])
+        self.__set_row_height(sheet, 50)
+        self.__set_col_width(sheet, self.variables_col_width[sheet_name])
+        # 开始设置单元格样式
+        self.__set_sheet_cell(sheet, self.variables_col_width[sheet_name])
+        self.__set_sheet_header(sheet)
+        # 完成设置单元格样式
+        self.__set_sheet_data_validation_for_variable_type(sheet)
         book.save(xl_file)
+        book.close()
 
-    @staticmethod
-    def generate_keyword_xl(xl_file):
+    def generate_keyword_xl(self, xl_file):
         book = Workbook()
-        sheet = book.create_sheet(u'关键字集', 0)
-        sheet.append([u'关键字', u'参数'])
+        sheet_name = self.keywords_sheets[0]
+        sheet = book.create_sheet(sheet_name, 0)
+        sheet.append(self.keywords_headers[sheet_name])
         book.save(xl_file)
+        book.close()
 
     def init_project(self, cmd_args: dict):
         """
@@ -320,18 +336,18 @@ class HRobot(object):
         :param: cmd_args
         :return:
         """
-        project_path = os.path.join(self.env['WORKDIR'], cmd_args['project'])
+        project_path = os.path.join(self.work_dir, cmd_args['project'])
         if os.path.exists(project_path):
             print(u"项目目录 %s 已经存在" % project_path)
             exit(1)
         os.mkdir(project_path)
-        os.mkdir(os.path.join(project_path, self.env['TESTCASES_DIR']))
-        os.mkdir(os.path.join(project_path, self.env['VARIABLES_DIR']))
-        os.mkdir(os.path.join(project_path, self.env['KEYWORDS_DIR']))
-        self.generate_testcase_xl(os.path.join(project_path, self.env['TESTCASES_DIR'], self.env['TESTCASES_FILE']))
-        self.generate_variable_xl(os.path.join(project_path, self.env['VARIABLES_DIR'], self.env['VARIABLES_FILE']))
-        self.generate_keyword_xl(os.path.join(project_path, self.env['KEYWORDS_DIR'], self.env['KEYWORDS_FILE']))
-        with open(os.path.join(project_path, self.env['HROBOT_PROJECT_FILE']), 'w', encoding='utf-8') as f:
+        os.mkdir(os.path.join(project_path, self.testcases_dir))
+        os.mkdir(os.path.join(project_path, self.variables_dir))
+        os.mkdir(os.path.join(project_path, self.keywords_dir))
+        self.generate_testcase_xl(os.path.join(project_path, self.testcases_dir, self.testcases_file))
+        self.generate_variable_xl(os.path.join(project_path, self.variables_dir, self.variables_file))
+        self.generate_keyword_xl(os.path.join(project_path, self.keywords_dir, self.keywords_file))
+        with open(os.path.join(project_path, self.project_file), 'w', encoding='utf-8') as f:
             f.write(yaml.safe_dump({
                 "PROJECT": cmd_args['project'],
             }))
@@ -408,9 +424,9 @@ class HRobot(object):
         book = load_workbook(xl_file)
         robot_file_name_prefix = os.path.basename(xl_file).split('.')[0]
         robot_file = os.path.join(
-            self.env['WORKDIR'],
-            self.env['ROBOT_DIR'],
-            self.env['TESTCASES_DIR'],
+            self.work_dir,
+            self.robot_dir,
+            self.testcases_dir,
             '%s' % robot_file_name_prefix
         )
         robot_json = {
@@ -617,7 +633,8 @@ class HRobot(object):
         with open('%s.robot' % robot_file, 'w', encoding='utf-8') as f:
             f.write(robot_content)
 
-    def __cls_to_robot_keywords(self, kw_lib):
+    @staticmethod
+    def __cls_to_robot_keywords(kw_lib):
         """
         把 Class 转换成 RobotFramework 关键字
         :return:
@@ -674,9 +691,9 @@ class HRobot(object):
             #     keyword_name = inspect.getdoc(kw_cls.__getattribute__(kw_fun_name))
             #     print(u'发现可用关键字 %s.%s' % (keyword_lib, keyword_name))
             robot_file = os.path.join(
-                self.env['WORKDIR'],
-                self.env['ROBOT_DIR'],
-                self.env['KEYWORDS_DIR'],
+                self.work_dir,
+                self.robot_dir,
+                self.keywords_dir,
                 "%s.robot" % keyword_lib
             )
             robot_keywords = self.__cls_to_robot_keywords(kw_cls)
@@ -696,11 +713,44 @@ class HRobot(object):
             with open(robot_file, 'w', encoding='utf-8') as f:
                 f.write(robot_content)
 
-    def xl_to_robot_keyword(self):
+    def xl_to_robot_keyword(self, xl_file):
         pass
 
-    def xl_to_robot_variable(self):
-        pass
+    def xl_to_robot_variable(self, xl_file):
+        robot_file_name_prefix = os.path.basename(xl_file).split('.')[0]
+        robot_file = os.path.join(
+            self.work_dir,
+            self.robot_dir,
+            self.variables_dir,
+            '%s' % robot_file_name_prefix
+        )
+        robot_json = dict()
+        book = load_workbook(xl_file)
+        # 开始解析 sheet 变量
+        sheet_variables = book[u"变量"]
+        sheet_header = dict()
+        col_num = 0
+        for col_name in sheet_variables[1]:
+            sheet_header[col_name.value] = col_num
+            col_num += 1
+        for row_data in list(sheet_variables.rows)[1:]:
+            var_key = row_data[sheet_header[u'变量名']].value
+            var_type = row_data[sheet_header[u'变量类型']].value
+            var_value = row_data[sheet_header[u'变量值']].value
+            if var_type in ['str']:
+                var_value = str(var_value)
+            elif var_type in ['int']:
+                var_value = int(float(var_value))
+            elif var_type in ['list']:
+                var_value = json.dumps(var_value)
+            elif var_type in ['dict']:
+                var_value = json.dumps(var_value)
+            print_info(u'加载变量 %s : %s' % (var_key, var_value))
+            robot_json[var_key] = var_value
+        # 解析 sheet 变量 完成
+        with open('%s.yaml' % robot_file, 'w', encoding='utf-8') as f:
+            f.write(yaml.safe_dump(robot_json))
+        book.close()
 
     def run_project(self, cmd_args: dict):
         """
@@ -708,28 +758,28 @@ class HRobot(object):
         :param: cmd_args
         :return:
         """
-        if not os.path.exists(self.env["HROBOT_PROJECT_FILE"]):
+        if not os.path.exists(self.project_file):
             print(u'这不是一个 hRobot 项目目录')
             return False
-        robot_path = os.path.join(self.env['WORKDIR'], self.env['ROBOT_DIR'])
+        robot_path = os.path.join(self.work_dir, self.robot_dir)
         os.system('rm -rf %s' % robot_path)
         os.mkdir(robot_path)
-        os.mkdir(os.path.join(robot_path, self.env['TESTCASES_DIR']))
-        os.mkdir(os.path.join(robot_path, self.env['KEYWORDS_DIR']))
-        os.mkdir(os.path.join(robot_path, self.env['VARIABLES_DIR']))
+        os.mkdir(os.path.join(robot_path, self.testcases_dir))
+        os.mkdir(os.path.join(robot_path, self.keywords_dir))
+        os.mkdir(os.path.join(robot_path, self.variables_dir))
         self.cls_to_robot_builtin_keyword()
-        for case_file in os.listdir(os.path.join(self.env['WORKDIR'], self.env['TESTCASES_DIR'])):
+        for case_file in os.listdir(os.path.join(self.work_dir, self.testcases_dir)):
             if str(case_file).split('.')[-1] not in ['xlsx', 'xlsm', 'xltx', 'xltm'] or str(case_file).startswith('~'):
                 continue
             print(u'开始解析 %s' % case_file)
-            xl_case_file = os.path.join(self.env['WORKDIR'], self.env['TESTCASES_DIR'], case_file)
+            xl_case_file = os.path.join(self.work_dir, self.testcases_dir, case_file)
             self.xl_to_robot_case(xl_case_file)
             # 删除重建 Excel 中 可用关键字 sheet ，重新加载 可用关键字
             book = load_workbook(xl_case_file)
             sheet_keyword = book[u'可用关键字']
             book.remove(sheet_keyword)
             sheet_keyword = book.create_sheet(u'可用关键字', 4)
-            sheet_keyword.append(self.env['TESTCASES_HEADERS'][u'可用关键字'])
+            sheet_keyword.append(self.testcases_headers[u'可用关键字'])
             keyword_index = self.__reload_hrobot_keywords_to_xl_sheet(sheet_keyword)
             # 添加数据验证定义名称
             self.__define_names_for_keywords(book, keyword_index)
@@ -739,75 +789,95 @@ class HRobot(object):
             self.__set_sheet_data_validation(book[u'后置'], 'A', 'B', keyword_index)
             self.__set_sheet_data_validation_for_variable_type(book[u'变量'])
             # 完成数据验证配置和定义名称
-            self.__set_sheet_cell(sheet_keyword, 'ABCDEFG')
+            self.__set_sheet_cell(sheet_keyword, self.testcases_col_width[u'可用关键字'])
             self.__set_sheet_header(sheet_keyword)
             self.__set_row_height(sheet_keyword, sheet_keyword.max_row + 1)
-            self.__set_col_width(sheet_keyword, self.env["TESTCASES_COL_WIDTH"][u'可用关键字'])
-            self.__set_sheet_cell(book[u'用例'], 'ABCDEFGHIJ')
+            self.__set_col_width(sheet_keyword, self.testcases_col_width[u'可用关键字'])
+            self.__set_sheet_cell(book[u'用例'], self.testcases_col_width[u'用例'])
             self.__set_sheet_header(book[u'用例'])
             self.__set_row_height(book[u'用例'], book[u'用例'].max_row + 1)
-            self.__set_col_width(book[u'用例'], self.env["TESTCASES_COL_WIDTH"][u'用例'])
-            self.__set_sheet_cell(book[u'变量'], 'ABC')
+            self.__set_col_width(book[u'用例'], self.testcases_col_width[u'用例'])
+            self.__set_sheet_cell(book[u'变量'], self.testcases_col_width[u'变量'])
             self.__set_sheet_header(book[u'变量'])
             self.__set_row_height(book[u'变量'], book[u'变量'].max_row + 1)
-            self.__set_col_width(book[u'变量'], self.env["TESTCASES_COL_WIDTH"][u'变量'])
-            self.__set_sheet_cell(book[u'前置'], 'ABCDEF')
+            self.__set_col_width(book[u'变量'], self.testcases_col_width[u'变量'])
+            self.__set_sheet_cell(book[u'前置'], self.testcases_col_width[u'前置'])
             self.__set_sheet_header(book[u'前置'])
             self.__set_row_height(book[u'前置'], book[u'前置'].max_row + 1)
-            self.__set_col_width(book[u'前置'], self.env["TESTCASES_COL_WIDTH"][u'前置'])
-            self.__set_sheet_cell(book[u'后置'], 'ABCDEF')
+            self.__set_col_width(book[u'前置'], self.testcases_col_width[u'前置'])
+            self.__set_sheet_cell(book[u'后置'], self.testcases_col_width[u'后置'])
             self.__set_sheet_header(book[u'后置'])
             self.__set_row_height(book[u'后置'], book[u'后置'].max_row + 1)
-            self.__set_col_width(book[u'后置'], self.env["TESTCASES_COL_WIDTH"][u'后置'])
+            self.__set_col_width(book[u'后置'], self.testcases_col_width[u'后置'])
             book.save(xl_case_file)
+            book.close()
             # 更新完成
-        allure_results_dir = os.path.join(robot_path, self.env['OUTPUT_DIR'], 'allure-results')
+        allure_results_dir = os.path.join(robot_path, self.output_dir, 'allure-results')
+        # 开始解析环境变量
+        try:
+            xl_files = os.listdir(os.path.join(self.work_dir, self.variables_dir))
+        except FileNotFoundError:
+            xl_files = list()
+        for variable_file in xl_files:
+            if str(variable_file).split('.')[-1] not in ['xlsx', 'xlsm', 'xltx', 'xltm'] or str(variable_file).startswith('~'):
+                continue
+            print(u'开始解析 %s' % variable_file)
+            xl_variable_file = os.path.join(self.work_dir, self.variables_dir, variable_file)
+            self.xl_to_robot_variable(xl_variable_file)
+        variable_files = list()
+        try:
+            yaml_files = os.listdir(os.path.join(self.robot_dir, self.variables_dir))
+        except FileNotFoundError:
+            yaml_files = list()
+        for _file in yaml_files:
+            variable_files.append(os.path.join(self.robot_dir, self.variables_dir, _file))
+        # 完成解析环境变量
         if cmd_args['suite'] and cmd_args['case']:
             robot.run(
-                self.env['ROBOT_DIR'],
+                self.robot_dir,
                 consolewidth=80,
                 consolecolors='on',
-                outputdir=os.path.join(robot_path, self.env['OUTPUT_DIR']),
+                outputdir=os.path.join(robot_path, self.output_dir),
                 listener='allure_robotframework;%s' % allure_results_dir,
                 reporttitle='Hybrid Robot Report',
-                variablefile=os.listdir(os.path.join(robot_path, self.env['VARIABLES_DIR'])),
+                variablefile=variable_files,
                 include=[cmd_args['tag']] if cmd_args['tag'] else [],
                 suite=cmd_args['suite'],
                 test=cmd_args['case']
             )
         elif cmd_args['suite'] and not cmd_args['case']:
             robot.run(
-                self.env['ROBOT_DIR'],
+                self.robot_dir,
                 consolewidth=80,
                 consolecolors='on',
-                outputdir=os.path.join(robot_path, self.env['OUTPUT_DIR']),
+                outputdir=os.path.join(robot_path, self.output_dir),
                 listener='allure_robotframework;%s' % allure_results_dir,
                 reporttitle='Hybrid Robot Report',
-                variablefile=os.listdir(os.path.join(robot_path, self.env['VARIABLES_DIR'])),
+                variablefile=os.listdir(os.path.join(robot_path, self.variables_dir)),
                 include=[cmd_args['tag']] if cmd_args['tag'] else [],
                 suite=cmd_args['suite']
             )
         elif not cmd_args['suite'] and cmd_args['case']:
             robot.run(
-                self.env['ROBOT_DIR'],
+                self.robot_dir,
                 consolewidth=80,
                 consolecolors='on',
-                outputdir=os.path.join(robot_path, self.env['OUTPUT_DIR']),
+                outputdir=os.path.join(robot_path, self.output_dir),
                 listener='allure_robotframework;%s' % allure_results_dir,
                 reporttitle='Hybrid Robot Report',
-                variablefile=os.listdir(os.path.join(robot_path, self.env['VARIABLES_DIR'])),
+                variablefile=os.listdir(os.path.join(robot_path, self.variables_dir)),
                 include=[cmd_args['tag']] if cmd_args['tag'] else [],
                 test=cmd_args['case']
             )
         elif not cmd_args['suite'] and not cmd_args['case']:
             robot.run(
-                self.env['ROBOT_DIR'],
+                self.robot_dir,
                 consolewidth=80,
                 consolecolors='on',
-                outputdir=os.path.join(robot_path, self.env['OUTPUT_DIR']),
+                outputdir=os.path.join(robot_path, self.output_dir),
                 listener='allure_robotframework;%s' % allure_results_dir,
                 reporttitle='Hybrid Robot Report',
-                variablefile=os.listdir(os.path.join(robot_path, self.env['VARIABLES_DIR'])),
+                variablefile=variable_files,
                 include=[cmd_args['tag']] if cmd_args['tag'] else []
             )
         if os.path.exists(allure_results_dir):
@@ -822,13 +892,13 @@ class HRobot(object):
                 }))
 
     def generate_report(self):
-        if not os.path.exists(self.env["HROBOT_PROJECT_FILE"]):
+        if not os.path.exists(self.project_file):
             print(u'这不是一个 hRobot 项目目录')
             return False
         allure_results_path = os.path.join(
-            self.env['WORKDIR'],
-            self.env['ROBOT_DIR'],
-            self.env['OUTPUT_DIR'],
+            self.work_dir,
+            self.robot_dir,
+            self.output_dir,
             'allure-results'
         )
         if not os.path.exists(allure_results_path):
