@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 import os
 
 
-URL = 'https://github.com/seoktaehyeon/hrobot'
+URL = 'https://github.com/qualitysphere/hrobot'
 NAME = 'hrobot'
 VERSION = '0.1'
 DESCRIPTION = 'Hybrid Robot'
