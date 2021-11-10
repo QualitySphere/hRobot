@@ -33,7 +33,7 @@ def help_doc_cmd(sys_args):
 def help_doc_init(sys_args):
     help_doc = '\n'.join([
         '%s init' % os.path.basename(sys_args[0]),
-        u'  -p    project',
+        u'  -p    project  定义一个测试项目目录的名称',
     ])
     print(help_doc)
     exit(1)
@@ -42,9 +42,9 @@ def help_doc_init(sys_args):
 def help_doc_debug(sys_args):
     help_doc = '\n'.join([
         '%s debug' % os.path.basename(sys_args[0]),
-        u'  -s    suite      测试用例集',
-        u'  -c    case       测试用例',
-        u'  -t    tag        标签',
+        u'  -s    suite  测试用例集，测试用例 Excel 文件的文件名（不包含 .xlsx 后缀）',
+        u'  -c    case   测试用例, 测试用例 Excel 文件中的 "用例" Sheet 中 "用例标题" 列的单元格内容',
+        u'  -t    tag    标签, 测试用例 Excel 文件中的 "用例" Sheet 中 "标签" 列的单元格内容',
     ])
     print(help_doc)
     exit(1)
