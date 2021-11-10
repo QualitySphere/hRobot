@@ -30,12 +30,24 @@
 pip install hrobot
 ```
 
+#### 执行 `hrobot` 检查
+
+```text
+hrobot
+  init     初始化项目目录
+  run      执行测试用例
+  debug    调试测试用例，支持选择用例集、测试用例、标签
+  report   生成并展示测试报告
+  version  显示版本信息
+```
+
 #### 初始化测试用例项目
 
-使用 `hrobot` 工具初始化项目目录
+使用 `hrobot init` 初始化项目目录
 
-```bash
-hrobot init -p <projectName>
+```text
+hrobot init 
+  -p    project  定义一个测试项目目录的名称
 ```
 
 进入到项目目录中后，文件树接口如下：
@@ -50,7 +62,7 @@ hrobot init -p <projectName>
     └── variables.xlsx
 ```
 
-*PS: keywords 和 variables 暂无实际作用*  
+*PS: keywords 暂无实际作用*  
 
 #### 编写测试用例 
 
@@ -102,11 +114,35 @@ hrobot init -p <projectName>
   10|<br> |<br>|<br>| 接口| 响应.断言 | status_code | 等于 | 200
   11|<br> |<br>|<br>| 接口 | 响应.断言 | body.username | 等于 | jing
 
-#### 自定义变量
+#### 执行用例
 
-除了在测试用例执行过程中获取返回值作为变量传递，也可以通过 Excel 打开 variables 目录中的 variables.xls 文件，按照定义好的列进行填写，预先定义一些变量
+```bash
+cd <projectName>
+hrobot run
+```
 
-- 待设计
+#### 生成报告
+
+```bash
+hrobot report
+```
+
+#### 调试用例
+
+```text
+hrobot debug
+  -s    suite  测试用例集，测试用例 Excel 文件的文件名（不包含 .xlsx 后缀）
+  -c    case   测试用例, 测试用例 Excel 文件中的 "用例" Sheet 中 "用例标题" 列的单元格内容
+  -t    tag    标签, 测试用例 Excel 文件中的 "用例" Sheet 中 "标签" 列的单元格内容
+```
+
+#### 定义变量
+
+变量有三个级别：用例、用例集、全局，均可以在测试用例的 Excel 编写中通过关键字定义。
+
+除此之外，也可以在用例集的 Excel 的 "变量" Sheet 中提前定义好用例集级别的变量。
+
+全局变量还可以在 variables 目录下的 Excel 中定义，该处定义的全局变量会在报告的环境信息段落中展现。
 
 ### 自定义关键字
 
