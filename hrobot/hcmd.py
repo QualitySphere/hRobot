@@ -67,9 +67,7 @@ def cmd_init(sys_args):
 
 
 def cmd_run_full():
-    _args = {
-        "full": True
-    }
+    _args = {}
     _robot = hcore.HRobot()
     _robot.run_project(_args)
 

@@ -832,68 +832,28 @@ class HRobot(object):
         for _file in yaml_files:
             robot_variable_files.append(os.path.join(self.robot_dir, self.variables_dir, _file))
         # 完成解析环境变量
-        robot_report_title = 'Hybrid Robot Report'
-        robot_listener = 'allure_robotframework;%s' % allure_results_dir
-        robot_include = [cmd_args['tag']] if cmd_args.get('tag') else []
-        robot_output_dir = os.path.join(robot_path, self.output_dir)
-        if cmd_args.get('full'):
-            robot.run(
-                self.robot_dir,
-                consolewidth=80,
-                consolecolors='on',
-                outputdir=robot_output_dir,
-                listener=robot_listener,
-                reporttitle=robot_report_title,
-                variablefile=robot_variable_files
-            )
-        elif cmd_args['suite'] and cmd_args['case']:
-            robot.run(
-                self.robot_dir,
-                consolewidth=80,
-                consolecolors='on',
-                outputdir=robot_output_dir,
-                listener=robot_listener,
-                reporttitle=robot_report_title,
-                variablefile=robot_variable_files,
-                include=robot_include,
-                suite=cmd_args['suite'],
-                test=cmd_args['case']
-            )
-        elif cmd_args['suite'] and not cmd_args['case']:
-            robot.run(
-                self.robot_dir,
-                consolewidth=80,
-                consolecolors='on',
-                outputdir=robot_output_dir,
-                listener=robot_listener,
-                reporttitle=robot_report_title,
-                variablefile=robot_variable_files,
-                include=robot_include,
-                suite=cmd_args['suite']
-            )
-        elif not cmd_args['suite'] and cmd_args['case']:
-            robot.run(
-                self.robot_dir,
-                consolewidth=80,
-                consolecolors='on',
-                outputdir=robot_output_dir,
-                listener=robot_listener,
-                reporttitle=robot_report_title,
-                variablefile=robot_variable_files,
-                include=robot_include,
-                test=cmd_args['case']
-            )
-        elif not cmd_args['suite'] and not cmd_args['case']:
-            robot.run(
-                self.robot_dir,
-                consolewidth=80,
-                consolecolors='on',
-                outputdir=robot_output_dir,
-                listener=robot_listener,
-                reporttitle=robot_report_title,
-                variablefile=robot_variable_files,
-                include=robot_include
-            )
+        robot_args = [
+            '--consolewidth', 80,
+            '--consolecolors', 'on',
+            '--outputdir', os.path.join(robot_path, self.output_dir),
+            '--listener', 'allure_robotframework;%s' % allure_results_dir,
+            '--reporttitle', 'Hybrid Robot Report',
+        ]
+        for robot_variable_file in robot_variable_files:
+            robot_args.append('--variablefile')
+            robot_args.append(robot_variable_file)
+        if cmd_args.get('suite'):
+            robot_args.append('--suite')
+            robot_args.append(cmd_args['suite'])
+        if cmd_args.get('case'):
+            robot_args.append('--test')
+            robot_args.append(cmd_args['case'])
+        if cmd_args.get('tag'):
+            robot_args.append('--include')
+            robot_args.append(cmd_args['tag'])
+        robot_args.append(os.path.join(self.robot_dir, 'testcases'))
+        # print_info(robot_args)
+        robot.run_cli(arguments=robot_args)
         if os.path.exists(allure_results_dir):
             robot_environment = list()
             for robot_variable in robot_variable_files:
