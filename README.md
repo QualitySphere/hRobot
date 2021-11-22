@@ -2,7 +2,7 @@
 
 基于 RobotFramework 的二次封装
 
-> **警告**
+> **注意**
 > 
 > 该方案是对 RobotFramework 的二次封装，以减轻中国用户使用符合欧美用户习惯的原生 RobotFramework 时的不适，因此，该方案并**不适合**所有场景。针对技术能力暂时薄弱、英文能力差的中小团队，可能具有一定的疗效。
 
@@ -22,7 +22,7 @@
 - 检测到系统为非 Windows/Mac 系统时，将增加环境变量 `HROBOT_BROWSER_MODE=headless`，Chrome 将不启动图形界面
 - 安装时会集成常用于测试场景的 Python 库，如: requests, selenium, paramiko
 
-## 使用手册
+## 快速开始
 
 #### 安装
 
@@ -70,33 +70,23 @@ hrobot init
 
 - 用例
 
-  <br>|A|B|C|D|E|F|G|H
-  ----|----|----|----|----|----|----|----|----
-  1|用例标题|标签|用例描述|关键字库|关键字|参数|
-  
+  <img src="https://qualitysphere.gitee.io/img/hrobot-suite.png" width="800">
+
 - 变量
 
-  <br>|A|B|C
-  ----|----|----|----
-  1|变量类型|变量名|变量值
+  <img src="https://qualitysphere.gitee.io/img/hrobot-variable.png" width="480">
   
 - 前置
 
-  <br>|A|B|C
-  ----|----|----|----
-  1|关键字库|关键字|参数
+  <img src="https://qualitysphere.gitee.io/img/hrobot-setup.png" width="480">
 
 - 后置
 
-  <br>|A|B|C
-  ----|----|----|----
-  1|关键字库|关键字|参数
+  <img src="https://qualitysphere.gitee.io/img/hrobot-setup.png" width="480">
   
 - 可用关键字
 
-  <br>|A|B|C
-  ----|----|----|----
-  1|关键字库|关键字|参数
+  <img src="https://qualitysphere.gitee.io/img/hrobot-setup.png" width="480">
 
 例子：
 
@@ -127,16 +117,7 @@ hrobot run
 hrobot report
 ```
 
-#### 调试用例
-
-```text
-hrobot debug
-  -s    suite  测试用例集，测试用例 Excel 文件的文件名（不包含 .xlsx 后缀）
-  -c    case   测试用例, 测试用例 Excel 文件中的 "用例" Sheet 中 "用例标题" 列的单元格内容
-  -t    tag    标签, 测试用例 Excel 文件中的 "用例" Sheet 中 "标签" 列的单元格内容
-```
-
-#### 定义变量
+## 定义变量
 
 变量有三个级别：用例、用例集、全局，均可以在测试用例的 Excel 编写中通过关键字定义。
 
@@ -144,6 +125,8 @@ hrobot debug
 
 全局变量还可以在 variables 目录下的 Excel 中定义，该处定义的全局变量会在报告的环境信息段落中展现。
 
-### 自定义关键字
+<img src="https://qualitysphere.gitee.io/img/hrobot-variable.png" width="480">
+
+## 自定义关键字
 
 - 待设计
