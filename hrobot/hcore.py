@@ -124,14 +124,17 @@ class HRobot(object):
                 keyword_name = inspect.getdoc(keyword_obj)
                 keyword_row += 1
                 keyword_args = list()
-                fun_args = inspect.getfullargspec(keyword_obj)
-                for fun_arg in fun_args.args[1:]:
+                full_args = inspect.getfullargspec(keyword_obj)
+                for fun_arg in full_args.args[1:]:
                     keyword_args.append('${%s}' % fun_arg)
-                arg_defaults = fun_args.defaults
+                arg_defaults = full_args.defaults
                 if arg_defaults:
                     for i in range(-1, -len(arg_defaults) - 1, -1):
                         keyword_args[i] = '%s=%s' % (keyword_args[i], str(arg_defaults[i]))
-                xl_sheet.append([keyword_lib, keyword_name] + keyword_args)
+                if full_args.varargs:
+                    xl_sheet.append([keyword_lib, keyword_name] + keyword_args + ['@{args}'])
+                else:
+                    xl_sheet.append([keyword_lib, keyword_name] + keyword_args)
                 print(u'加载可用关键字 %s.%s' % (keyword_lib, keyword_name))
             keyword_end_col = xl_sheet.max_row
             keyword_index.append([keyword_lib, keyword_start_col, keyword_end_col])
@@ -250,9 +253,10 @@ class HRobot(object):
 
     def generate_testcase_xl(self, xl_file):
         book = Workbook()
+        sheet_index = 0
         # 开始 定义 Sheet 用例
-        sheet_name = self.testcases_sheets[0]
-        sheet_case = book.create_sheet(sheet_name, 0)
+        sheet_name = self.testcases_sheets[sheet_index]
+        sheet_case = book.create_sheet(sheet_name, sheet_index)
         self.__set_row_height(sheet_case, 500)
         self.__set_col_width(sheet_case, self.testcases_col_width[sheet_name])
         sheet_case.append(self.testcases_headers[sheet_name])
@@ -269,8 +273,9 @@ class HRobot(object):
         # 完成 定义 Sheet 用例
 
         # 开始 定义 Sheet 变量
-        sheet_name = self.testcases_sheets[1]
-        sheet_variables = book.create_sheet(sheet_name, 1)
+        sheet_index += 1
+        sheet_name = self.testcases_sheets[sheet_index]
+        sheet_variables = book.create_sheet(sheet_name, sheet_index)
         self.__set_row_height(sheet_variables, 50)
         self.__set_col_width(sheet_variables, self.testcases_col_width[sheet_name])
         sheet_variables.append(self.testcases_headers[sheet_name])
@@ -281,8 +286,9 @@ class HRobot(object):
         # 完成 定义 Sheet 变量
 
         # 开始 定义 Sheet 前置
-        sheet_name = self.testcases_sheets[2]
-        sheet_setup = book.create_sheet(sheet_name, 2)
+        sheet_index += 1
+        sheet_name = self.testcases_sheets[sheet_index]
+        sheet_setup = book.create_sheet(sheet_name, sheet_index)
         self.__set_row_height(sheet_setup, 50)
         self.__set_col_width(sheet_setup, self.testcases_col_width[sheet_name])
         sheet_setup.append(self.testcases_headers[sheet_name])
@@ -294,8 +300,9 @@ class HRobot(object):
         # 完成 定义 Sheet 前置
 
         # 开始 定义 Sheet 后置
-        sheet_name = self.testcases_sheets[3]
-        sheet_teardown = book.create_sheet(sheet_name, 3)
+        sheet_index += 1
+        sheet_name = self.testcases_sheets[sheet_index]
+        sheet_teardown = book.create_sheet(sheet_name, sheet_index)
         self.__set_row_height(sheet_teardown, 50)
         self.__set_col_width(sheet_teardown, self.testcases_col_width[sheet_name])
         sheet_teardown.append(self.testcases_headers[sheet_name])
@@ -307,8 +314,9 @@ class HRobot(object):
         # 完成 定义 Sheet 后置
 
         # 开始 定义 Sheet 可用关键字
-        sheet_name = self.testcases_sheets[4]
-        sheet_keyword = book.create_sheet(sheet_name, 4)
+        sheet_index += 1
+        sheet_name = self.testcases_sheets[sheet_index]
+        sheet_keyword = book.create_sheet(sheet_name, sheet_index)
         self.__set_col_width(sheet_keyword, self.testcases_col_width[sheet_name])
         sheet_keyword.append(self.testcases_headers[sheet_name])
         # 提取出 hRobot 中可用的关键字列表

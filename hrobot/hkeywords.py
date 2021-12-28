@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from robot.libraries import BuiltIn as robotBuiltIn
+# from robot.libraries import BuiltIn as robotBuiltIn
 # from robot.libraries import Collections as robotCollections
 # from robot.libraries import DateTime as robotDateTime
 from robot.api import logger
