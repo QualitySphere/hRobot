@@ -27,8 +27,32 @@ import yaml
 
 
 def print_info(info_string):
+    """
+    开启信息打印的 HTML 格式并显示在 console
+    :param info_string:
+    :return:
+    """
     logger.info(info_string, html=True, also_console=True)
     return True
+
+
+def cleanup_dir(cleanup_path):
+    """
+    递归清理目录
+    :param cleanup_path:
+    :return:
+    """
+    if os.path.exists(cleanup_path):
+        if os.path.isdir(cleanup_path):
+            print(u'发现目录 %s，开始清理 ...' % cleanup_path)
+            for cleanup_path_file in os.listdir(cleanup_path):
+                cleanup_file = os.path.join(cleanup_path, cleanup_path_file)
+                if os.path.isfile(cleanup_file):
+                    os.remove(cleanup_file)
+                else:
+                    cleanup_dir(cleanup_file)
+            if os.path.exists(cleanup_path):
+                os.removedirs(cleanup_path)
 
 
 class HRobot(object):
@@ -762,7 +786,7 @@ class HRobot(object):
             print(u'这不是一个 hRobot 项目目录')
             return False
         robot_path = os.path.join(self.work_dir, self.robot_dir)
-        os.system('rm -rf %s' % robot_path)
+        cleanup_dir(robot_path)
         os.mkdir(robot_path)
         os.mkdir(os.path.join(robot_path, self.testcases_dir))
         os.mkdir(os.path.join(robot_path, self.keywords_dir))
