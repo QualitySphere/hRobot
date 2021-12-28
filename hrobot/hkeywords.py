@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# from robot.libraries import BuiltIn as robotBuiltIn
+from robot.libraries import BuiltIn as robotBuiltIn
 # from robot.libraries import Collections as robotCollections
 # from robot.libraries import DateTime as robotDateTime
 from robot.api import logger
@@ -59,6 +59,9 @@ class BuiltIn(object):
         """休眠"""
         pass
 
+    def run_keyword_if(self, condition, name, *args):
+        """如果"""
+        pass
 
 # class DateTime(object):
 #     """关键字"""
@@ -100,11 +103,13 @@ class HttpRequests(object):
         """GET"""
         self.request_open()
         self.__response = None
-        if headers is None:
+        if not headers:
             headers = {
                 "Content-Type": "Application/json",
                 "User-Agent": "Hybrid Robot",
             }
+        else:
+            headers = json.loads(headers)
         print_info('\n'.join([
             u'请求',
             u'   Method     : GET',
@@ -113,6 +118,10 @@ class HttpRequests(object):
             u'   Cookies    : %s' % cookies,
             u'   Headers    : %s' % headers
         ]))
+        if params:
+            params = json.loads(params)
+        if cookies:
+            cookies = json.loads(cookies)
         # if params or params != 'None':
         #     params = json.loads(params)
         # else:

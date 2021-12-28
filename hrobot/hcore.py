@@ -672,11 +672,11 @@ class HRobot(object):
             if not fun_obj:
                 continue
             kw_name = inspect.getdoc(fun_obj)
-            fun_args = inspect.getfullargspec(fun_obj)
+            full_args = inspect.getfullargspec(fun_obj)
             kw_args = list()
-            for fun_arg in fun_args.args[1:]:
+            for fun_arg in full_args.args[1:]:
                 kw_args.append(['${%s}' % fun_arg])
-            arg_defaults = fun_args.defaults
+            arg_defaults = full_args.defaults
             if arg_defaults:
                 for i in range(-1, -len(arg_defaults) - 1, -1):
                     kw_args[i].append(str(arg_defaults[i]))
@@ -685,14 +685,15 @@ class HRobot(object):
             for kv in kw_args:
                 rf_kw_args.append('='.join(kv))
                 rf_fun_args.append(kv[0])
+            rf_kw_varargs = '@{args}' if full_args.varargs else ''
             # pprint('Keywords args %s' % rf_kw_args)
             # pprint('Function name %s' % fun_name)
             # pprint('Function args %s' % rf_fun_args)
             rbt_kws.append('\n'.join([
                 kw_name,
-                '    [Arguments]    %s' % '    '.join(rf_kw_args),
+                '    [Arguments]    %s    %s' % ('    '.join(rf_kw_args), rf_kw_varargs),
                 '    [Return]       ${KEYWORD_RETURN}',
-                '    ${KEYWORD_RETURN}    %s    %s' % (fun_name, '    '.join(rf_fun_args))
+                '    ${KEYWORD_RETURN}    %s    %s    %s' % (fun_name, '    '.join(rf_fun_args), rf_kw_varargs)
             ]))
             # pprint('RF Keywords %s' % rbt_kws)
             # print('\n')
